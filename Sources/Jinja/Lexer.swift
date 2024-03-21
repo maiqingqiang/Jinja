@@ -239,7 +239,7 @@ func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()
         }
 
         for (char, token) in orderedMappingTable {
-            let slice = src.slice(start: cursorPosition, end: char.count)
+            let slice = src.slice(start: cursorPosition, end: cursorPosition + char.count)
             if slice == char {
                 tokens.append(Token(value: char, type: token))
                 cursorPosition += char.count
@@ -260,6 +260,7 @@ func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()
         if isInteger(char: char) {
             let num = try consumeWhile(predicate: isInteger)
             tokens.append(Token(value: num, type: .numericLiteral))
+            continue
         }
 
         if isWord(char: char) {

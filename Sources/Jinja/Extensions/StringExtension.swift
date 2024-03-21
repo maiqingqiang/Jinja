@@ -14,7 +14,7 @@ extension String {
 
     func slice(start: Int, end: Int) -> Self {
         let startPosition = index(startIndex, offsetBy: start)
-        let endPosition = index(startPosition, offsetBy: end)
+        let endPosition = index(startIndex, offsetBy: end)
         return String(self[startPosition ..< endPosition])
     }
 }

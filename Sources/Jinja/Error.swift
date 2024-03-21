@@ -9,4 +9,5 @@ import Foundation
 
 enum JinjaError: Error {
     case syntaxError(String)
+    case parserError(String)
 }
