@@ -37,7 +37,3 @@ func slice<T>(_ array: [T], start: Int? = nil, stop: Int? = nil, step: Int = 1) 
     
     return slicedArray
 }
-
-func titleCase(_ value: String) -> String {
-    return value.capitalized
-}

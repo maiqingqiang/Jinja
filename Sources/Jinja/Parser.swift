@@ -24,13 +24,13 @@ func parse(tokens: [Token]) throws -> Program {
     func parseArgumentsList() throws -> [Statement] {
         var args: [Expression] = []
 
-        while !isMatch(.closeParen) {
+        while !typeof(.closeParen) {
             var argument = try parseExpression()
 
-            if isMatch(.equals) {
+            if typeof(.equals) {
                 current += 1
 
-                if argument as? Identifier == nil {
+                if argument is Identifier {
                     throw JinjaError.syntaxError("Expected identifier for keyword argument")
                 }
 
@@ -41,7 +41,7 @@ func parse(tokens: [Token]) throws -> Program {
 
             args.append(argument as! Expression)
 
-            if isMatch(.comma) {
+            if typeof(.comma) {
                 current += 1
             }
         }
@@ -72,7 +72,7 @@ func parse(tokens: [Token]) throws -> Program {
 
         var callExpression = CallExpression(callee: callee as! Expression, args: args)
 
-        if isMatch(.openParen) {
+        if typeof(.openParen) {
             callExpression = try parseCallExpression(callee: callExpression)
         }
 
@@ -83,14 +83,14 @@ func parse(tokens: [Token]) throws -> Program {
         var slices: [Statement?] = []
         var isSlice = false
 
-        while !isMatch(.closeSquareBracket) {
-            if isMatch(.colon) {
+        while !typeof(.closeSquareBracket) {
+            if typeof(.colon) {
                 slices.append(nil)
                 current += 1
                 isSlice = true
             } else {
                 try slices.append(parseExpression())
-                if isMatch(.colon) {
+                if typeof(.colon) {
                     current += 1
                     isSlice = true
                 }
@@ -115,7 +115,7 @@ func parse(tokens: [Token]) throws -> Program {
     func parseMemberExpression() throws -> Statement {
         var object = try parsePrimaryExpression()
 
-        while isMatch(.dot) || isMatch(.openSquareBracket) {
+        while typeof(.dot) || typeof(.openSquareBracket) {
             let operation = tokens[current]
             current += 1
             var property: Statement
@@ -141,7 +141,7 @@ func parse(tokens: [Token]) throws -> Program {
     func parseCallMemberExpression() throws -> Statement {
         let member = try parseMemberExpression()
 
-        if isMatch(.openParen) {
+        if typeof(.openParen) {
             return try parseCallExpression(callee: member)
         }
 
@@ -151,14 +151,14 @@ func parse(tokens: [Token]) throws -> Program {
     func parseFilterExpression() throws -> Statement {
         var operand = try parseCallMemberExpression()
 
-        while isMatch(.pipe) {
+        while typeof(.pipe) {
             current += 1
             var filter = try parsePrimaryExpression()
-            if filter as? Identifier == nil {
+            if !(filter is Identifier) {
                 throw JinjaError.syntaxError("Expected identifier for the test")
             }
 
-            if isMatch(.openParen) {
+            if typeof(.openParen) {
                 filter = try parseCallExpression(callee: filter)
             }
 
@@ -175,9 +175,9 @@ func parse(tokens: [Token]) throws -> Program {
     func parseTestExpression() throws -> Statement {
         var operand = try parseFilterExpression()
 
-        while isMatch(.is) {
+        while typeof(.is) {
             current += 1
-            let negate = isMatch(.not)
+            let negate = typeof(.not)
 
             if negate {
                 current += 1
@@ -189,7 +189,7 @@ func parse(tokens: [Token]) throws -> Program {
                 filter = Identifier(value: String(boolLiteralFlter.value))
             }
 
-            if filter as? Identifier == nil {
+            if !(filter is Identifier) {
                 throw JinjaError.syntaxError("Expected identifier for the test")
             }
 
@@ -201,10 +201,10 @@ func parse(tokens: [Token]) throws -> Program {
     func parseMultiplicativeExpression() throws -> Statement {
         var left = try parseTestExpression()
 
-        while isMatch(.multiplicativeBinaryOperator) {
+        while typeof(.multiplicativeBinaryOperator) {
             let operation = tokens[current]
             current += 1
-            var right = try parseTestExpression()
+            let right = try parseTestExpression()
             left = BinaryExpression(operation: operation, left: left as! Expression, right: right as! Expression)
         }
         return left
@@ -212,10 +212,10 @@ func parse(tokens: [Token]) throws -> Program {
 
     func parseAdditiveExpression() throws -> Statement {
         var left = try parseMultiplicativeExpression()
-        while isMatch(.additiveBinaryOperator) {
+        while typeof(.additiveBinaryOperator) {
             let operation = tokens[current]
             current += 1
-            var right = try parseMultiplicativeExpression()
+            let right = try parseMultiplicativeExpression()
             left = BinaryExpression(operation: operation, left: left as! Expression, right: right as! Expression)
         }
         return left
@@ -223,10 +223,10 @@ func parse(tokens: [Token]) throws -> Program {
 
     func parseComparisonExpression() throws -> Statement {
         var left = try parseAdditiveExpression()
-        while isMatch(.comparisonBinaryOperator) || isMatch(.in) || isMatch(.notIn) {
+        while typeof(.comparisonBinaryOperator) || typeof(.in) || typeof(.notIn) {
             let operation = tokens[current]
             current += 1
-            var right = try parseAdditiveExpression()
+            let right = try parseAdditiveExpression()
             left = BinaryExpression(operation: operation, left: left as! Expression, right: right as! Expression)
         }
 
@@ -236,7 +236,7 @@ func parse(tokens: [Token]) throws -> Program {
     func parseLogicalNegationExpression() throws -> Statement {
         var right: UnaryExpression?
 
-        while isMatch(.not) {
+        while typeof(.not) {
             let operation = tokens[current]
             current += 1
             let argument = try parseLogicalNegationExpression()
@@ -250,7 +250,7 @@ func parse(tokens: [Token]) throws -> Program {
 
     func parseLogicalAndExpression() throws -> Statement {
         var left = try parseLogicalNegationExpression()
-        while isMatch(.and) {
+        while typeof(.and) {
             let operation = tokens[current]
             current += 1
             let right = try parseLogicalNegationExpression()
@@ -263,7 +263,7 @@ func parse(tokens: [Token]) throws -> Program {
     func parseLogicalOrExpression() throws -> Statement {
         var left = try parseLogicalAndExpression()
 
-        while isMatch(.or) {
+        while typeof(.or) {
             let operation = tokens[current]
             current += 1
             let right = try parseLogicalAndExpression()
@@ -274,7 +274,7 @@ func parse(tokens: [Token]) throws -> Program {
 
     func parseTernaryExpression() throws -> Statement {
         let a = try parseLogicalOrExpression()
-        if isMatch(.if) {
+        if typeof(.if) {
             current += 1
             let test = try parseLogicalOrExpression()
             _ = try expect(type: .else, error: "Expected else token")
@@ -286,10 +286,10 @@ func parse(tokens: [Token]) throws -> Program {
     }
 
     func parseExpression() throws -> Statement {
-        Statement()
+        try parseTernaryExpression()
     }
 
-    func isMatch(_ types: TokenType...) -> Bool {
+    func typeof(_ types: TokenType...) -> Bool {
         guard current+types.count <= tokens.count else {
             return false
         }
@@ -306,11 +306,11 @@ func parse(tokens: [Token]) throws -> Program {
     func parseSetStatement() throws -> Statement {
         let left = try parseExpression()
 
-        if isMatch(.equals) {
+        if typeof(.equals) {
             current += 1
             let value = try parseSetStatement()
 
-            return SetStatement(assignee: left as! Expression, value: value as! Expression)
+            return Set(assignee: left as! Expression, value: value as! Expression)
         }
 
         return left
@@ -331,7 +331,7 @@ func parse(tokens: [Token]) throws -> Program {
         }
         if tokens[current].type == .openStatement, tokens[current+1].type != .endIf {
             current += 1
-            if isMatch(.elseIf) {
+            if typeof(.elseIf) {
                 _ = try expect(type: .elseIf, error: "Expected elseif token")
                 try alternate.append(parseIfStatement())
             } else {
@@ -372,10 +372,10 @@ func parse(tokens: [Token]) throws -> Program {
         case .openSquareBracket:
             current += 1
             var values: [Expression] = []
-            while !isMatch(.closeSquareBracket) {
+            while !typeof(.closeSquareBracket) {
                 try values.append(parseExpression() as! Expression)
 
-                if isMatch(.comma) {
+                if typeof(.comma) {
                     current += 1
                 }
             }
@@ -385,14 +385,14 @@ func parse(tokens: [Token]) throws -> Program {
         case .openCurlyBracket:
             current += 1
             var values: [(Expression, Expression)] = []
-            while !isMatch(.closeCurlyBracket) {
+            while !typeof(.closeCurlyBracket) {
                 let key = try parseExpression()
                 _ = try expect(type: .colon, error: "Expected colon between key and value in object literal")
                 let value = try parseExpression()
 
                 values.append((key as! Expression, value as! Expression))
 
-                if isMatch(.comma) {
+                if typeof(.comma) {
                     current += 1
                 }
             }
@@ -408,11 +408,11 @@ func parse(tokens: [Token]) throws -> Program {
     func parseExpressionSequence(primary: Bool = false) throws -> Statement {
         let fn = primary ? parsePrimaryExpression : parseExpression
         var expressions: [Expression] = try [fn() as! Expression]
-        let isTuple = isMatch(.comma)
+        let isTuple = typeof(.comma)
         while isTuple {
             current += 1
             try expressions.append(fn() as! Expression)
-            if !isMatch(.comma) {
+            if !typeof(.comma) {
                 break
             }
         }
@@ -433,13 +433,16 @@ func parse(tokens: [Token]) throws -> Program {
     func parseForStatement() throws -> Statement {
         let loopVariable = try parseExpressionSequence(primary: true)
 
-        if !(loopVariable as? Identifier != nil || loopVariable as? TupleLiteral != nil) {
+        if !(loopVariable is Identifier || loopVariable is TupleLiteral) {
             throw JinjaError.syntaxError("Expected identifier/tuple for the loop variable, got \(loopVariable.type) instead")
         }
 
         _ = try expect(type: .in, error: "Expected `in` keyword following loop variable")
 
         let iterable = try parseExpression()
+        
+        _ = try expect(type: .closeStatement, error: "Expected closing statement token")
+
         var body: [Statement] = []
         while not(.openStatement, .endFor) {
             try body.append(parseAny())

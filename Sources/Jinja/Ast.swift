@@ -7,128 +7,68 @@
 
 import Foundation
 
-class Statement: Equatable {
-    static func == (lhs: Statement, rhs: Statement) -> Bool {
-        lhs.type == rhs.type
-    }
-
-    var type: String = "Statement"
+protocol Statement {
+    var type: String { get }
 }
 
-class Program: Statement {
-    static func == (lhs: Program, rhs: Program) -> Bool {
-        lhs.body == rhs.body && lhs.type == rhs.type
-    }
-
-    var body: [Statement]
-
-    init(body: [Statement] = []) {
-        self.body = body
-        super.init()
-        self.type = "Program"
-    }
+struct Program: Statement {
+    let type: String = "Program"
+    var body: [Statement] = []
 }
 
-class Expression: Statement {
-    override init() {
-        super.init()
-        self.type = "Expression"
-    }
+protocol Expression: Statement {}
+
+protocol Literal: Expression {
+    associatedtype T
+    var value: T { get set }
 }
 
-class Literal<T>: Expression {
-    var value: T
-    override init() {
-        fatalError("Literal<T> is an abstract class and should not be instantiated directly.")
-    }
-
-    init(value: T) {
-        self.value = value
-        super.init()
-        self.type = "Literal"
-    }
+struct StringLiteral: Literal {
+    let type: String = "StringLiteral"
+    var value: String
 }
 
-class StringLiteral: Literal<String> {
-    override init(value: String) {
-        super.init(value: value)
-        self.type = "StringLiteral"
-    }
-    
-    static func == (lhs: StringLiteral, rhs: StringLiteral) -> Bool {
-        lhs.value == rhs.value && lhs.type == rhs.type
-    }
+struct NumericLiteral: Literal {
+    let type: String = "NumericLiteral"
+    var value: any Numeric
 }
 
-class NumericLiteral: Literal<Numeric> {
-    override init(value: any Numeric) {
-        super.init(value: value)
-        self.type = "NumericLiteral"
-    }
+struct BoolLiteral: Literal {
+    let type: String = "BoolLiteral"
+    var value: Bool
 }
 
-class BoolLiteral: Literal<Bool> {
-    override init(value: Bool) {
-        super.init(value: value)
-        self.type = "BoolLiteral"
-    }
+struct ArrayLiteral: Literal {
+    let type: String = "ArrayLiteral"
+    var value: [Expression]
 }
 
-class ArrayLiteral: Literal<[Expression]> {
-    override init(value: [Expression]) {
-        super.init(value: value)
-        self.type = "ArrayLiteral"
-    }
+struct TupleLiteral: Literal {
+    let type: String = "TupleLiteral"
+    var value: [Expression]
 }
 
-class TupleLiteral: Literal<[Expression]> {
-    override init(value: [Expression]) {
-        super.init(value: value)
-        self.type = "TupleLiteral"
-    }
+struct ObjectLiteral: Literal {
+    let type: String = "ObjectLiteral"
+    var value: [(Expression, Expression)]
 }
 
-class ObjectLiteral: Literal<[(Expression, Expression)]> {
-    override init(value: [(Expression, Expression)]) {
-        super.init(value: value)
-        self.type = "TupleLiteral"
-    }
-}
-
-class SetStatement: Statement {
+struct Set: Statement {
+    let type: String = "Set"
     var assignee: Expression
     var value: Expression
-
-    init(assignee: Expression, value: Expression) {
-        self.assignee = assignee
-        self.value = value
-        super.init()
-        self.type = "Set"
-    }
 }
 
-class If: Statement {
+struct If: Statement {
+    let type: String = "If"
     var test: Expression
     var body: [Statement]
     var alternate: [Statement]
-
-    init(test: Expression, body: [Statement], alternate: [Statement]) {
-        self.test = test
-        self.body = body
-        self.alternate = alternate
-        super.init()
-        self.type = "If"
-    }
 }
 
-class Identifier: Expression {
+struct Identifier: Expression {
+    let type: String = "Identifier"
     var value: String
-
-    init(value: String) {
-        self.value = value
-        super.init()
-        self.type = "Identifier"
-    }
 }
 
 enum Loopvar {
@@ -136,73 +76,31 @@ enum Loopvar {
     case tupleLiteral(TupleLiteral)
 }
 
-class For: Statement {
+struct For: Statement {
+    let type: String = "For"
     var loopvar: Loopvar
     var iterable: Expression
     var body: [Statement]
-
-    init(
-        loopvar: Loopvar,
-        iterable: Expression,
-        body: [Statement]
-    ) {
-        self.loopvar = loopvar
-        self.iterable = iterable
-        self.body = body
-        super.init()
-        self.type = "For"
-    }
 }
 
-class MemberExpression: Expression {
+struct MemberExpression: Expression {
+    let type: String = "MemberExpression"
     var object: Expression
     var property: Expression
     var computed: Bool
-
-    init(
-        object: Expression,
-        property: Expression,
-        computed: Bool
-    ) {
-        self.object = object
-        self.property = property
-        self.computed = computed
-        super.init()
-        self.type = "MemberExpression"
-    }
 }
 
-class CallExpression: Expression {
+struct CallExpression: Expression {
+    let type: String = "CallExpression"
     var callee: Expression
     var args: [Expression]
-
-    init(
-        callee: Expression,
-        args: [Expression]
-    ) {
-        self.callee = callee
-        self.args = args
-        super.init()
-        self.type = "CallExpression"
-    }
 }
 
-class BinaryExpression: Expression {
+struct BinaryExpression: Expression {
+    let type: String = "BinaryExpression"
     var operation: Token
     var left: Expression
     var right: Expression
-
-    init(
-        operation: Token,
-        left: Expression,
-        right: Expression
-    ) {
-        self.operation = operation
-        self.left = left
-        self.right = right
-        super.init()
-        self.type = "BinaryExpression"
-    }
 }
 
 enum Filter {
@@ -210,95 +108,39 @@ enum Filter {
     case callExpression(CallExpression)
 }
 
-class FilterExpression: Expression {
+struct FilterExpression: Expression {
+    let type: String = "FilterExpression"
     var operand: Expression
     var filter: Filter
-
-    init(
-        operand: Expression,
-        filter: Filter
-    ) {
-        self.operand = operand
-        self.filter = filter
-        super.init()
-        self.type = "FilterExpression"
-    }
 }
 
-class TestExpression: Expression {
+struct TestExpression: Expression {
+    let type: String = "TestExpression"
     var operand: Expression
     var negate: Bool
     var test: Identifier
-
-    init(
-        operand: Expression,
-        negate: Bool,
-        test: Identifier
-    ) {
-        self.operand = operand
-        self.negate = negate
-        self.test = test
-        super.init()
-        self.type = "TestExpression"
-    }
 }
 
-class UnaryExpression: Expression {
+struct UnaryExpression: Expression {
+    let type: String = "UnaryExpression"
     var operation: Token
     var argument: Expression
-
-    init(
-        operation: Token,
-        argument: Expression
-    ) {
-        self.operation = operation
-        self.argument = argument
-        super.init()
-        self.type = "UnaryExpression"
-    }
 }
 
-class LogicalNegationExpression: Expression {
+struct LogicalNegationExpression: Expression {
+    let type: String = "LogicalNegationExpression"
     var argument: Expression
-
-    init(
-        argument: Expression
-    ) {
-        self.argument = argument
-        super.init()
-        self.type = "LogicalNegationExpression"
-    }
 }
 
-class SliceExpression: Expression {
+struct SliceExpression: Expression {
+    let type: String = "SliceExpression"
     var start: Expression?
     var stop: Expression?
     var step: Expression?
-
-    init(
-        start: Expression?,
-        stop: Expression?,
-        step: Expression?
-    ) {
-        self.start = start
-        self.stop = stop
-        self.step = step
-        super.init()
-        self.type = "SliceExpression"
-    }
 }
 
-class KeywordArgumentExpression: Expression {
+struct KeywordArgumentExpression: Expression {
+    let type: String = "KeywordArgumentExpression"
     var key: Identifier
-    var value: Expression
-
-    init(
-        key: Identifier,
-        value: Expression
-    ) {
-        self.key = key
-        self.value = value
-        super.init()
-        self.type = "KeywordArgumentExpression"
-    }
+    var value: any Expression
 }

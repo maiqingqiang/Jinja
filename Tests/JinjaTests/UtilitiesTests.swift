@@ -16,8 +16,5 @@ final class UtilitiesTests: XCTestCase {
 
         let sliceExample = slice([1, 2, 3, 4, 5], start: 1, stop: 4, step: 1)
         print("Slice Example: \(sliceExample)")
-
-        let titleCaseExample = titleCase("hello world")
-        print("Title Case Example: \(titleCaseExample)")
     }
 }
