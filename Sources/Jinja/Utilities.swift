@@ -11,16 +11,17 @@ func range(start: Int, stop: Int? = nil, step: Int = 1) -> [Int] {
     let stopUnwrapped = stop ?? start
     let startValue = stop == nil ? 0 : start
     let stopValue = stop == nil ? start : stopUnwrapped
-    
+
     return stride(from: startValue, to: stopValue, by: step).map { $0 }
 }
 
-func slice<T>(_ array: [T], start: Int? = nil, stop: Int? = nil, step: Int = 1) -> [T] {
+func slice<T>(_ array: [T], start: Int? = nil, stop: Int? = nil, step: Int? = 1) -> [T] {
     let arrayCount = array.count
     let startValue = start ?? 0
     let stopValue = stop ?? arrayCount
+    let step = step ?? 1
     var slicedArray = [T]()
-    
+
     if step > 0 {
         let startIndex = startValue < 0 ? max(arrayCount + startValue, 0) : min(startValue, arrayCount)
         let stopIndex = stopValue < 0 ? max(arrayCount + stopValue, 0) : min(stopValue, arrayCount)
@@ -34,6 +35,6 @@ func slice<T>(_ array: [T], start: Int? = nil, stop: Int? = nil, step: Int = 1) 
             slicedArray.append(array[i])
         }
     }
-    
+
     return slicedArray
 }

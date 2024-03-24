@@ -106,7 +106,11 @@ func parse(tokens: [Token]) throws -> Program {
                 throw JinjaError.syntaxError("Expected 0-3 arguments for slice expression")
             }
 
-            return SliceExpression(start: slices[0] as? Expression, stop: slices[1] as? Expression, step: slices[2] as? Expression)
+            return SliceExpression(
+                start: slices[0] as? Expression,
+                stop: slices.count > 1 ? slices[1] as? Expression : nil,
+                step: slices.count > 2 ? slices[2] as? Expression : nil
+            )
         }
 
         return slices[0]!
@@ -243,9 +247,11 @@ func parse(tokens: [Token]) throws -> Program {
             right = UnaryExpression(operation: operation, argument: argument as! Expression)
         }
 
-        let expression = try parseComparisonExpression()
-
-        return right ?? expression
+        if let right {
+            return right
+        } else {
+            return try parseComparisonExpression()
+        }
     }
 
     func parseLogicalAndExpression() throws -> Statement {
@@ -351,7 +357,7 @@ func parse(tokens: [Token]) throws -> Program {
         switch token.type {
         case .numericLiteral:
             current += 1
-            return NumericLiteral(value: token.value as! (any Numeric))
+            return NumericLiteral(value: Int(token.value) ?? 0)
         case .stringLiteral:
             current += 1
             return StringLiteral(value: token.value)
@@ -440,7 +446,7 @@ func parse(tokens: [Token]) throws -> Program {
         _ = try expect(type: .in, error: "Expected `in` keyword following loop variable")
 
         let iterable = try parseExpression()
-        
+
         _ = try expect(type: .closeStatement, error: "Expected closing statement token")
 
         var body: [Statement] = []

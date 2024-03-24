@@ -12,149 +12,159 @@ protocol RuntimeValue {
     var type: String { get }
     var value: T { get set }
 
-    var builtins: [(String, any RuntimeValue)] { get set }
-}
+    var builtins: [String: any RuntimeValue] { get set }
 
-extension RuntimeValue {
-    func bool() -> BooleanValue {
-        BooleanValue(value: true)
-    }
+    func bool() -> Bool
 }
 
 struct NumericValue: RuntimeValue {
     let type: String = "NumericValue"
     var value: any Numeric
-    var builtins: [(String, any RuntimeValue)] = []
+    var builtins: [String: any RuntimeValue] = [:]
+
+    func bool() -> Bool {
+        self.value as? Int != 0
+    }
 }
 
 struct BooleanValue: RuntimeValue {
     let type: String = "BooleanValue"
     var value: Bool
-    var builtins: [(String, any RuntimeValue)] = []
+    var builtins: [String: any RuntimeValue] = [:]
+
+    func bool() -> Bool {
+        self.value
+    }
 }
 
 struct NullValue: RuntimeValue {
     let type: String = "NullValue"
     var value: (any RuntimeValue)?
-    var builtins: [(String, any RuntimeValue)] = []
+    var builtins: [String: any RuntimeValue] = [:]
+
+    func bool() -> Bool {
+        false
+    }
 }
 
 struct UndefinedValue: RuntimeValue {
     let type: String = "UndefinedValue"
     var value: (any RuntimeValue)?
-    var builtins: [(String, any RuntimeValue)] = []
+    var builtins: [String: any RuntimeValue] = [:]
+
+    func bool() -> Bool {
+        false
+    }
 }
 
 struct ArrayValue: RuntimeValue {
     let type: String = "ArrayValue"
     var value: [any RuntimeValue]
-    var builtins: [(String, any RuntimeValue)] = []
+    var builtins: [String: any RuntimeValue] = [:]
 
     init(value: [any RuntimeValue]) {
         self.value = value
-        self.builtins = [
-            (
-                "length",
-                FunctionValue(value: { _, _ in
-                    NumericValue(value: value.count)
-                })
-            ),
-        ]
+        self.builtins["length"] = FunctionValue(value: { _, _ in
+            NumericValue(value: value.count)
+        })
+    }
+
+    func bool() -> Bool {
+        !self.value.isEmpty
     }
 }
 
 struct TupleValue: RuntimeValue {
     let type: String = "TupleValue"
     var value: ArrayValue
-    var builtins: [(String, any RuntimeValue)] = []
+    var builtins: [String: any RuntimeValue] = [:]
+
+    func bool() -> Bool {
+        self.value.bool()
+    }
 }
 
 struct ObjectValue: RuntimeValue {
     let type: String = "BooleanValue"
     var value: [String: any RuntimeValue]
-    var builtins: [(String, any RuntimeValue)]
+    var builtins: [String: any RuntimeValue] = [:]
 
     init(value: [String: any RuntimeValue]) {
         self.value = value
         self.builtins = [
-            (
-                "get",
-                FunctionValue(value: { args, _ in
-                    if let key = args[0] as? StringValue {
-                        if let value = value.first(where: { $0.0 == key.value }) {
-                            return value
-                        } else if args.count > 1 {
-                            return args[1]
-                        } else {
-                            return NullValue()
-                        }
+            "get": FunctionValue(value: { args, _ in
+                if let key = args[0] as? StringValue {
+                    if let value = value.first(where: { $0.0 == key.value }) {
+                        return value as! (any RuntimeValue)
+                    } else if args.count > 1 {
+                        return args[1]
                     } else {
-                        throw JinjaError.runtimeError("Object key must be a string: got \(args[0].type)")
+                        return NullValue()
                     }
-                })
-            ),
-            (
-                "items",
-                FunctionValue(value: { _, _ in
-                    var items: [ArrayValue] = []
-                    for (k, v) in value {
-                        items.append(ArrayValue(value: [
-                            StringValue(value: k),
-                            v,
-                        ]))
-                    }
-                    return items
-                })
-            ),
+                } else {
+                    throw JinjaError.runtimeError("Object key must be a string: got \(args[0].type)")
+                }
+            }),
+            "items": FunctionValue(value: { _, _ in
+                var items: [ArrayValue] = []
+                for (k, v) in value {
+                    items.append(ArrayValue(value: [
+                        StringValue(value: k),
+                        v,
+                    ]))
+                }
+                return items as! (any RuntimeValue)
+            }),
         ]
+    }
+
+    func bool() -> Bool {
+        !self.value.isEmpty
     }
 }
 
 struct FunctionValue: RuntimeValue {
     let type: String = "FunctionValue"
-    var value: ([any RuntimeValue], Environment) throws -> Any
-    var builtins: [(String, any RuntimeValue)] = []
+    var value: ([any RuntimeValue], Environment) throws -> any RuntimeValue
+    var builtins: [String: any RuntimeValue] = [:]
+
+    func bool() -> Bool {
+        true
+    }
 }
 
 struct StringValue: RuntimeValue {
     let type: String = "StringValue"
     var value: String
-    var builtins: [(String, any RuntimeValue)]
+    var builtins: [String: any RuntimeValue] = [:]
 
     init(value: String) {
         self.value = value
         self.builtins = [
-            (
-                "upper",
-                FunctionValue(value: { _, _ in
-                    StringValue(value: value.uppercased())
-                })
-            ),
-            (
-                "lower",
-                FunctionValue(value: { _, _ in
-                    StringValue(value: value.lowercased())
-                })
-            ),
-            (
-                "strip",
-                FunctionValue(value: { _, _ in
-                    StringValue(value: value.trimmingCharacters(in: .whitespacesAndNewlines))
-                })
-            ),
-            (
-                "title",
-                FunctionValue(value: { _, _ in
-                    StringValue(value: value.capitalized)
-                })
-            ),
-            (
-                "length",
-                FunctionValue(value: { _, _ in
-                    NumericValue(value: value.count)
-                })
-            ),
+            "upper": FunctionValue(value: { _, _ in
+                StringValue(value: value.uppercased())
+            }),
+
+            "lower": FunctionValue(value: { _, _ in
+                StringValue(value: value.lowercased())
+            }),
+
+            "strip": FunctionValue(value: { _, _ in
+                StringValue(value: value.trimmingCharacters(in: .whitespacesAndNewlines))
+            }),
+
+            "title": FunctionValue(value: { _, _ in
+                StringValue(value: value.capitalized)
+            }),
+
+            "length": FunctionValue(value: { _, _ in
+                NumericValue(value: value.count)
+            }),
         ]
+    }
+
+    func bool() -> Bool {
+        !self.value.isEmpty
     }
 }
 
@@ -181,7 +191,10 @@ struct Interpreter {
                     switch lastEvaluated.value {
                     case let value as Int:
                         result += String(value)
-                    default: break
+                    case let value as String:
+                        result += value
+                    default:
+                        throw JinjaError.runtimeError("Unknown value type:\(type(of: lastEvaluated.value))")
                     }
                 }
             }
@@ -197,8 +210,22 @@ struct Interpreter {
     func evaluateSet(node: Set, environment: Environment) throws -> NullValue {
         let rhs = try self.evaluate(statement: node.value, environment: environment)
         if node.assignee.type == "Identifier" {
-            let identifier = node.assignee as! Identifier
-//            environment.variables.append((identifier.name, rhs))
+            let variableName = (node.assignee as! Identifier).value
+            _ = try environment.setVariable(name: variableName, value: rhs)
+        } else if node.assignee.type == "MemberExpression" {
+            let member = node.assignee as! MemberExpression
+
+            let object = try self.evaluate(statement: member.object, environment: environment)
+
+            if var object = object as? ObjectValue {
+                if let property = member.property as? Identifier {
+                    object.value[property.value] = rhs
+                } else {
+                    throw JinjaError.runtimeError("Cannot assign to member with non-identifier property")
+                }
+            } else {
+                throw JinjaError.runtimeError("Cannot assign to member of non-object")
+            }
         } else {
             throw JinjaError.runtimeError("Invalid assignee type: \(node.assignee.type)")
         }
@@ -209,7 +236,7 @@ struct Interpreter {
     func evaluateIf(node: If, environment: Environment) throws -> StringValue {
         let test = try self.evaluate(statement: node.test, environment: environment)
 
-        return try self.evaluateBlock(statements: test.bool().value ? node.body : node.alternate, environment: environment)
+        return try self.evaluateBlock(statements: test.bool() ? node.body : node.alternate, environment: environment)
     }
 
     func evaluateIdentifier(node: Identifier, environment: Environment) throws -> any RuntimeValue {
@@ -272,6 +299,257 @@ struct Interpreter {
         return StringValue(value: result)
     }
 
+    func evaluateBinaryExpression(node: BinaryExpression, environment: Environment) throws -> any RuntimeValue {
+        let left = try self.evaluate(statement: node.left, environment: environment)
+
+        if node.operation.value == "and" {
+            return left.bool() ? try self.evaluate(statement: node.right, environment: environment) : left
+        } else if node.operation.value == "or" {
+            return left.bool() ? left : try self.evaluate(statement: node.right, environment: environment)
+        }
+
+        let right = try self.evaluate(statement: node.right, environment: environment)
+
+        if node.operation.value == "==" {
+            switch left.value {
+            case let value as String:
+                return BooleanValue(value: value == right.value as! String)
+            case let value as Int:
+                return BooleanValue(value: value == right.value as! Int)
+            case let value as Bool:
+                return BooleanValue(value: value == right.value as! Bool)
+            default:
+                throw JinjaError.runtimeError("Unknown left value type:\(type(of: left.value)), right value type:\(type(of: right.value))")
+            }
+        } else if node.operation.value == "!=" {
+            return BooleanValue(value: left.value as! AnyHashable != right.value as! AnyHashable)
+        }
+
+        if left is UndefinedValue || right is UndefinedValue {
+            throw JinjaError.runtimeError("Cannot perform operation on undefined values")
+        } else if left is NullValue || right is NullValue {
+            throw JinjaError.runtimeError("Cannot perform operation on null values")
+        } else if let left = left as? NumericValue, let right = right as? NumericValue {
+            switch node.operation.value {
+            case "+":
+                throw fatalError("TODO!")
+            case "-": throw fatalError("TODO!")
+            case "*": throw fatalError("TODO!")
+            case "/": throw fatalError("TODO!")
+            case "%":
+                switch left.value {
+                case is Int:
+                    return NumericValue(value: left.value as! Int % (right.value as! Int))
+                default:
+                    throw JinjaError.runtimeError("Unknown value type:\(type(of: left.value))")
+                }
+            case "<": throw fatalError("TODO!")
+            case ">": throw fatalError("TODO!")
+            case ">=": throw fatalError("TODO!")
+            case "<=": throw fatalError("TODO!")
+            default:
+                throw JinjaError.runtimeError("Unknown operation type:\(node.operation.value)")
+            }
+        } else if left is ArrayValue && right is ArrayValue {
+            switch node.operation.value {
+            case "+": break
+            default:
+                throw JinjaError.runtimeError("Unknown operation type:\(node.operation.value)")
+            }
+        } else if let right = right as? ArrayValue {
+//            let member = right.value.first { x in
+//                x.value == left.value
+//            }
+            throw fatalError("TODO!")
+        }
+
+        if left is StringValue || right is StringValue {
+            switch node.operation.value {
+            case "+":
+                var rightValue = ""
+                var leftValue = ""
+                switch right.value {
+                case let value as String:
+                    rightValue = value
+                case let value as Int:
+                    rightValue = String(value)
+                case let value as Bool:
+                    rightValue = String(value)
+                default:
+                    throw JinjaError.runtimeError("Unknown right value type:\(type(of: right.value))")
+                }
+
+                switch left.value {
+                case let value as String:
+                    leftValue = value
+                case let value as Int:
+                    leftValue = String(value)
+                case let value as Bool:
+                    rightValue = String(value)
+                default:
+                    throw JinjaError.runtimeError("Unknown left value type:\(type(of: left.value))")
+                }
+
+                return StringValue(value: leftValue + rightValue)
+            default:
+//                throw JinjaError.runtimeError("Unknown operation type:\(node.operation.value)")
+                break
+            }
+        }
+
+        if let left = left as? StringValue, let right = right as? StringValue {
+            switch node.operation.value {
+            case "in":
+                return BooleanValue(value: right.value.contains(left.value))
+            case "not in":
+                return BooleanValue(value: !right.value.contains(left.value))
+            default:
+                throw JinjaError.runtimeError("Unknown operation type:\(node.operation.value)")
+            }
+        }
+
+        if left is StringValue, right is ObjectValue {
+            throw fatalError("TODO!")
+//            switch node.operation.value {
+//            case "in": break
+//            case "not in": break
+//            default:
+//                break
+//            }
+        }
+
+        throw JinjaError.syntaxError("Unknown operator '\(node.operation.value)' between \(left.type) and \(right.type)")
+    }
+
+    func evaluateSliceExpression(
+        object: any RuntimeValue,
+        expr: SliceExpression,
+        environment: Environment
+    ) throws -> any RuntimeValue {
+        if !(object is ArrayValue || object is StringValue) {
+            throw JinjaError.runtimeError("Slice object must be an array or string")
+        }
+
+        let start = try self.evaluate(statement: expr.start, environment: environment)
+        let stop = try self.evaluate(statement: expr.stop, environment: environment)
+        let step = try self.evaluate(statement: expr.step, environment: environment)
+
+        if !(start is NumericValue || start is UndefinedValue) {
+            throw JinjaError.runtimeError("Slice start must be numeric or undefined")
+        }
+
+        if !(stop is NumericValue || stop is UndefinedValue) {
+            throw JinjaError.runtimeError("Slice stop must be numeric or undefined")
+        }
+
+        if !(step is NumericValue || step is UndefinedValue) {
+            throw JinjaError.runtimeError("Slice step must be numeric or undefined")
+        }
+
+        if let object = object as? ArrayValue {
+            return ArrayValue(value: slice(object.value, start: start.value as? Int, stop: stop.value as? Int, step: step.value as? Int))
+
+        } else if let object = object as? StringValue {
+            return StringValue(value: slice(Array(arrayLiteral: object.value), start: start.value as? Int, stop: stop.value as? Int, step: step.value as? Int).joined())
+        }
+
+        throw JinjaError.runtimeError("Slice object must be an array or string")
+    }
+
+    func evaluateMemberExpression(expr: MemberExpression, environment: Environment) throws -> any RuntimeValue {
+        let object = try self.evaluate(statement: expr.object, environment: environment)
+
+        var property: any RuntimeValue
+        if expr.computed {
+            if expr.property.type == "SliceExpression" {
+                return try self.evaluateSliceExpression(object: object, expr: expr.property as! SliceExpression, environment: environment)
+            } else {
+                property = try self.evaluate(statement: expr.property, environment: environment)
+            }
+        } else {
+            property = StringValue(value: (expr.property as! Identifier).value)
+        }
+
+        var value: (any RuntimeValue)?
+        if let object = object as? ObjectValue {
+            if let property = property as? StringValue {
+                value = object.value[property.value] ?? object.builtins[property.value]
+            } else {
+                throw JinjaError.runtimeError("Cannot access property with non-string: got \(property.type)")
+            }
+        } else if object is ArrayValue || object is StringValue {
+            if let property = property as? NumericValue {
+                if let object = object as? ArrayValue {
+                    let index = property.value as! Int
+                    if index >= 0 {
+                        value = object.value[index]
+                    } else {
+                        value = object.value[object.value.count + index]
+                    }
+                } else if let object = object as? StringValue {
+                    let index = object.value.index(object.value.startIndex, offsetBy: property.value as! Int)
+                    value = StringValue(value: String(object.value[index]))
+                }
+            } else if let property = property as? StringValue {
+                value = object.builtins[property.value]
+            } else {
+                throw JinjaError.runtimeError("Cannot access property with non-string/non-number: got \(property.type)")
+            }
+        } else {
+            if let property = property as? StringValue {
+                value = object.builtins[property.value]!
+            } else {
+                throw JinjaError.runtimeError("Cannot access property with non-string: got \(property.type)")
+            }
+        }
+
+        if let value {
+            return value
+        } else {
+            return UndefinedValue()
+        }
+    }
+
+    func evaluateUnaryExpression(node: UnaryExpression, environment: Environment) throws -> any RuntimeValue {
+        let argument = try self.evaluate(statement: node.argument, environment: environment)
+
+        switch node.operation.value {
+        case "not":
+            if let argument = argument as? BooleanValue {
+                return BooleanValue(value: !argument.value)
+            }
+
+            throw JinjaError.syntaxError("Unknown argument type: \(node.argument.type)")
+        default:
+            throw JinjaError.syntaxError("Unknown operator: \(node.operation.value)")
+        }
+    }
+
+    func evaluateCallExpression(expr: CallExpression, environment: Environment) throws -> any RuntimeValue {
+        var args: [any RuntimeValue] = []
+        var kwargs: [String: any RuntimeValue] = [:]
+
+        for argument in expr.args {
+            if let argument = argument as? KeywordArgumentExpression {
+                kwargs[argument.key.value] = try self.evaluate(statement: argument.value, environment: environment)
+            } else {
+                try args.append(self.evaluate(statement: argument, environment: environment))
+            }
+        }
+
+        if kwargs.count > 0 {
+            args.append(ObjectValue(value: kwargs))
+        }
+
+        let fn = try self.evaluate(statement: expr.callee, environment: environment)
+
+        if let fn = fn as? FunctionValue {
+            return try fn.value(args, environment)
+        } else {
+            throw JinjaError.runtimeError("Cannot call something that is not a function: got \(fn.type)")
+        }
+    }
+
     func evaluate(statement: Statement?, environment: Environment) throws -> any RuntimeValue {
         if let statement {
             switch statement.type {
@@ -281,12 +559,24 @@ struct Interpreter {
                 return try self.evaluateIf(node: statement as! If, environment: environment)
             case "StringLiteral":
                 return StringValue(value: (statement as! StringLiteral).value)
-//            case "Set":
-//                return try self.evaluateSet(set: statement as! Set, environment: environment)
+            case "Set":
+                return try self.evaluateSet(node: statement as! Set, environment: environment)
             case "For":
                 return try self.evaluateFor(node: statement as! For, environment: environment)
             case "Identifier":
                 return try self.evaluateIdentifier(node: statement as! Identifier, environment: environment)
+            case "BinaryExpression":
+                return try self.evaluateBinaryExpression(node: statement as! BinaryExpression, environment: environment)
+            case "MemberExpression":
+                return try self.evaluateMemberExpression(expr: statement as! MemberExpression, environment: environment)
+            case "UnaryExpression":
+                return try self.evaluateUnaryExpression(node: statement as! UnaryExpression, environment: environment)
+            case "NumericLiteral":
+                return NumericValue(value: (statement as! NumericLiteral).value)
+            case "CallExpression":
+                return try self.evaluateCallExpression(expr: statement as! CallExpression, environment: environment)
+            case "BoolLiteral":
+                return BooleanValue(value: (statement as! BoolLiteral).value)
             default:
                 throw JinjaError.runtimeError("Unknown node type: \(statement.type)")
             }

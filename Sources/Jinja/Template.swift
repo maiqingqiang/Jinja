@@ -16,12 +16,18 @@ struct Template {
     }
 
     func render(items: [String: Any]) throws -> String {
-        var env = Environment()
+        let env = Environment()
 
         _ = try env.set(name: "false", value: false)
         _ = try env.set(name: "true", value: true)
-        _ = try env.set(name: "raise_exception", value: { args in throw JinjaError.runtimeError("\(args)") })
+        _ = try env.set(name: "raise_exception", value: { (args: String) throws in
+            throw JinjaError.runtimeError("\(args)")
+        })
         _ = try env.set(name: "range", value: range)
+        
+        for (key,value) in items {
+            _ = try env.set(name: key, value: value)
+        }
 
         let interpreter = Interpreter(env: env)
         let result = try interpreter.run(program: self.parsed) as! StringValue

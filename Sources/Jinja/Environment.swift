@@ -91,6 +91,10 @@ class Environment {
         self.parent = parent
     }
 
+    func isFunction<T>(_ value: Any, functionType: T.Type) -> Bool {
+        value is T
+    }
+
     func convertToRuntimeValues(input: Any) throws -> any RuntimeValue {
         switch input {
         case let value as Bool:
@@ -105,6 +109,45 @@ class Environment {
             return NumericValue(value: value)
         case let value as String:
             return StringValue(value: value)
+        case let fn as (String) throws -> Void:
+            return FunctionValue { args, _ in
+                var arg = ""
+                switch args[0].value {
+                case let value as String:
+                    arg = value
+                case let value as Bool:
+                    arg = String(value)
+                default:
+                    throw JinjaError.runtimeError("Unknown arg type:\(type(of: args[0].value))")
+                }
+
+                try fn(arg)
+                return NullValue()
+            }
+        case let fn as (Bool) throws -> Void:
+            return FunctionValue { args, _ in
+                try fn(args[0].value as! Bool)
+                return NullValue()
+            }
+        case let fn as (Int, Int?, Int) -> [Int]:
+            return FunctionValue { args, _ in
+                let result = fn(args[0].value as! Int, args[1].value as? Int, args[2].value as! Int)
+                return try self.convertToRuntimeValues(input: result)
+            }
+        case let values as [Any]:
+            var items: [any RuntimeValue] = []
+            for value in values {
+                try items.append(self.convertToRuntimeValues(input: value))
+            }
+            return ArrayValue(value: items)
+        case let dictionary as [String: String]:
+            var object: [String: any RuntimeValue] = [:]
+
+            for (key, value) in dictionary {
+                object[key] = StringValue(value: value)
+            }
+
+            return ObjectValue(value: object)
         default:
             throw JinjaError.runtimeError("Cannot convert to runtime value: \(input) type:\(type(of: input))")
         }
