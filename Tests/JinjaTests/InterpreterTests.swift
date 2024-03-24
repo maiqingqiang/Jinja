@@ -9,7 +9,14 @@
 import XCTest
 
 let exampleIfTemplate = "<div>\n    {% if True %}\n        yay\n    {% endif %}\n</div>"
+
 let exampleForTemplate = "{% for item in seq %}\n    {{ item }}\n{% endfor %}"
+let exampleForTemplate2 = "{% for item in seq -%}\n    {{ item }}\n{% endfor %}"
+let exampleForTemplate3 = "{% for item in seq %}\n    {{ item }}\n{%- endfor %}"
+let exampleForTemplate4 = "{% for item in seq -%}\n    {{ item }}\n{%- endfor %}"
+
+let exampleCommentTemplate = "    {# comment #}\n  {# {% if true %} {% endif %} #}\n"
+
 let seq = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 final class InterpreterTests: XCTestCase {
@@ -50,6 +57,82 @@ final class InterpreterTests: XCTestCase {
                 "seq": seq
             ],
             target: "\n    1\n\n    2\n\n    3\n\n    4\n\n    5\n\n    6\n\n    7\n\n    8\n\n    9\n"
+        ),
+        Test(
+            template: exampleForTemplate,
+            data: [
+                "seq": seq
+            ],
+            options:.init( lstripBlocks: true),
+            target: "\n    1\n\n    2\n\n    3\n\n    4\n\n    5\n\n    6\n\n    7\n\n    8\n\n    9\n"
+        ),
+        Test(
+            template: exampleForTemplate,
+            data: [
+                "seq": seq
+            ],
+            options:.init( trimBlocks: true),
+            target: "    1\n    2\n    3\n    4\n    5\n    6\n    7\n    8\n    9\n"
+        ),
+        Test(
+            template: exampleForTemplate,
+            data: [
+                "seq": seq
+            ],
+            options:.init(trimBlocks: true, lstripBlocks: true),
+            target: "    1\n    2\n    3\n    4\n    5\n    6\n    7\n    8\n    9\n"
+        ),
+        Test(
+            template: exampleForTemplate2,
+            data: [
+                "seq": seq
+            ],
+            target: "1\n2\n3\n4\n5\n6\n7\n8\n9\n"
+        ),
+        Test(
+            template: exampleForTemplate3,
+            data: [
+                "seq": seq
+            ],
+            target: "\n    1\n    2\n    3\n    4\n    5\n    6\n    7\n    8\n    9"
+        ),
+        Test(
+            template: exampleForTemplate3,
+            data: [
+                "seq": seq
+            ],
+            options:.init(trimBlocks: true),
+            target: "    1    2    3    4    5    6    7    8    9"
+        ),
+        Test(
+            template: exampleForTemplate4,
+            data: [
+                "seq": seq
+            ],
+            target: "123456789"
+        ),
+        Test(
+            template: exampleCommentTemplate,
+            data: [:],
+            target: "    \n  "
+        ),
+        Test(
+            template: exampleCommentTemplate,
+            data: [:],
+            options:.init(lstripBlocks: true),
+            target: "\n"
+        ),
+        Test(
+            template: exampleCommentTemplate,
+            data: [:],
+            options:.init(trimBlocks: true),
+            target: "      "
+        ),
+        Test(
+            template: exampleCommentTemplate,
+            data: [:],
+            options:.init(trimBlocks: true, lstripBlocks: true),
+            target: ""
         )
     ]
 
