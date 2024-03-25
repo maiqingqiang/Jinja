@@ -331,11 +331,10 @@ struct Interpreter {
             throw JinjaError.runtimeError("Cannot perform operation on null values")
         } else if let left = left as? NumericValue, let right = right as? NumericValue {
             switch node.operation.value {
-            case "+":
-                throw fatalError("TODO!")
-            case "-": throw fatalError("TODO!")
-            case "*": throw fatalError("TODO!")
-            case "/": throw fatalError("TODO!")
+            case "+": throw JinjaError.notSupportError
+            case "-": throw JinjaError.notSupportError
+            case "*": throw JinjaError.notSupportError
+            case "/": throw JinjaError.notSupportError
             case "%":
                 switch left.value {
                 case is Int:
@@ -343,10 +342,10 @@ struct Interpreter {
                 default:
                     throw JinjaError.runtimeError("Unknown value type:\(type(of: left.value))")
                 }
-            case "<": throw fatalError("TODO!")
-            case ">": throw fatalError("TODO!")
-            case ">=": throw fatalError("TODO!")
-            case "<=": throw fatalError("TODO!")
+            case "<": throw JinjaError.notSupportError
+            case ">": throw JinjaError.notSupportError
+            case ">=": throw JinjaError.notSupportError
+            case "<=": throw JinjaError.notSupportError
             default:
                 throw JinjaError.runtimeError("Unknown operation type:\(node.operation.value)")
             }
@@ -357,10 +356,7 @@ struct Interpreter {
                 throw JinjaError.runtimeError("Unknown operation type:\(node.operation.value)")
             }
         } else if let right = right as? ArrayValue {
-//            let member = right.value.first { x in
-//                x.value == left.value
-//            }
-            throw fatalError("TODO!")
+            throw JinjaError.notSupportError
         }
 
         if left is StringValue || right is StringValue {
@@ -392,7 +388,6 @@ struct Interpreter {
 
                 return StringValue(value: leftValue + rightValue)
             default:
-//                throw JinjaError.runtimeError("Unknown operation type:\(node.operation.value)")
                 break
             }
         }
@@ -409,13 +404,7 @@ struct Interpreter {
         }
 
         if left is StringValue, right is ObjectValue {
-            throw fatalError("TODO!")
-//            switch node.operation.value {
-//            case "in": break
-//            case "not in": break
-//            default:
-//                break
-//            }
+            throw JinjaError.notSupportError
         }
 
         throw JinjaError.syntaxError("Unknown operator '\(node.operation.value)' between \(left.type) and \(right.type)")

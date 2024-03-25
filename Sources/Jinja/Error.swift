@@ -11,4 +11,5 @@ enum JinjaError: Error {
     case syntaxError(String)
     case parserError(String)
     case runtimeError(String)
+    case notSupportError
 }
