@@ -184,7 +184,7 @@ struct Interpreter {
         for statement in statements {
             let lastEvaluated = try self.evaluate(statement: statement, environment: environment)
 
-            if lastEvaluated.type != "NullValue", lastEvaluated.type != "UndefinedValue" {
+            if !(lastEvaluated is NullValue), !(lastEvaluated is UndefinedValue) {
                 if let value = lastEvaluated.value as? String {
                     result += value
                 } else {
@@ -209,12 +209,10 @@ struct Interpreter {
 
     func evaluateSet(node: Set, environment: Environment) throws -> NullValue {
         let rhs = try self.evaluate(statement: node.value, environment: environment)
-        if node.assignee.type == "Identifier" {
-            let variableName = (node.assignee as! Identifier).value
+        if let identifier = node.assignee as? Identifier {
+            let variableName = identifier.value
             _ = try environment.setVariable(name: variableName, value: rhs)
-        } else if node.assignee.type == "MemberExpression" {
-            let member = node.assignee as! MemberExpression
-
+        } else if let member = node.assignee as? MemberExpression {
             let object = try self.evaluate(statement: member.object, environment: environment)
 
             if var object = object as? ObjectValue {
@@ -270,22 +268,20 @@ struct Interpreter {
                 case .identifier(let identifier):
                     _ = try scope.setVariable(name: identifier.value, value: current)
                 case .tupleLiteral(let tupleLiteral):
-                    // TODO:
-                    if current.type != "ArrayValue" {
-                        throw JinjaError.runtimeError("Cannot unpack non-iterable type: \(current.type)")
-                    }
-
-                    let c = current as! ArrayValue
-
-                    if tupleLiteral.value.count != c.value.count {
-                        throw JinjaError.runtimeError("Too \(tupleLiteral.value.count > c.value.count ? "few" : "many") items to unpack")
-                    }
-
-                    for j in 0 ..< tupleLiteral.value.count {
-                        if tupleLiteral.value[j].type != "Identifier" {
-                            throw JinjaError.runtimeError("Cannot unpack non-identifier type: \(tupleLiteral.value[j].type)")
+                    if let current = current as? ArrayValue {
+                        if tupleLiteral.value.count != current.value.count {
+                            throw JinjaError.runtimeError("Too \(tupleLiteral.value.count > current.value.count ? "few" : "many") items to unpack")
                         }
-                        _ = try scope.setVariable(name: (tupleLiteral.value[j] as! Identifier).value, value: c.value[j])
+
+                        for j in 0 ..< tupleLiteral.value.count {
+                            if let identifier = tupleLiteral.value[j] as? Identifier {
+                                _ = try scope.setVariable(name: identifier.value, value: current.value[j])
+                            } else {
+                                throw JinjaError.runtimeError("Cannot unpack non-identifier type: \(tupleLiteral.value[j].type)")
+                            }
+                        }
+                    } else {
+                        throw JinjaError.runtimeError("Cannot unpack non-iterable type: \(current.type)")
                     }
                 }
 
@@ -355,7 +351,7 @@ struct Interpreter {
             default:
                 throw JinjaError.runtimeError("Unknown operation type:\(node.operation.value)")
             }
-        } else if let right = right as? ArrayValue {
+        } else if right is ArrayValue {
             throw JinjaError.notSupportError
         }
 
@@ -450,8 +446,8 @@ struct Interpreter {
 
         var property: any RuntimeValue
         if expr.computed {
-            if expr.property.type == "SliceExpression" {
-                return try self.evaluateSliceExpression(object: object, expr: expr.property as! SliceExpression, environment: environment)
+            if let property = expr.property as? SliceExpression {
+                return try self.evaluateSliceExpression(object: object, expr: property, environment: environment)
             } else {
                 property = try self.evaluate(statement: expr.property, environment: environment)
             }
@@ -541,31 +537,31 @@ struct Interpreter {
 
     func evaluate(statement: Statement?, environment: Environment) throws -> any RuntimeValue {
         if let statement {
-            switch statement.type {
-            case "Program":
-                return try self.evalProgram(program: statement as! Program, environment: environment)
-            case "If":
-                return try self.evaluateIf(node: statement as! If, environment: environment)
-            case "StringLiteral":
-                return StringValue(value: (statement as! StringLiteral).value)
-            case "Set":
-                return try self.evaluateSet(node: statement as! Set, environment: environment)
-            case "For":
-                return try self.evaluateFor(node: statement as! For, environment: environment)
-            case "Identifier":
-                return try self.evaluateIdentifier(node: statement as! Identifier, environment: environment)
-            case "BinaryExpression":
-                return try self.evaluateBinaryExpression(node: statement as! BinaryExpression, environment: environment)
-            case "MemberExpression":
-                return try self.evaluateMemberExpression(expr: statement as! MemberExpression, environment: environment)
-            case "UnaryExpression":
-                return try self.evaluateUnaryExpression(node: statement as! UnaryExpression, environment: environment)
-            case "NumericLiteral":
-                return NumericValue(value: (statement as! NumericLiteral).value)
-            case "CallExpression":
-                return try self.evaluateCallExpression(expr: statement as! CallExpression, environment: environment)
-            case "BoolLiteral":
-                return BooleanValue(value: (statement as! BoolLiteral).value)
+            switch statement {
+            case let statement as Program:
+                return try self.evalProgram(program: statement, environment: environment)
+            case let statement as If:
+                return try self.evaluateIf(node: statement, environment: environment)
+            case let statement as StringLiteral:
+                return StringValue(value: statement.value)
+            case let statement as Set:
+                return try self.evaluateSet(node: statement, environment: environment)
+            case let statement as For:
+                return try self.evaluateFor(node: statement, environment: environment)
+            case let statement as Identifier:
+                return try self.evaluateIdentifier(node: statement, environment: environment)
+            case let statement as BinaryExpression:
+                return try self.evaluateBinaryExpression(node: statement, environment: environment)
+            case let statement as MemberExpression:
+                return try self.evaluateMemberExpression(expr: statement, environment: environment)
+            case let statement as UnaryExpression:
+                return try self.evaluateUnaryExpression(node: statement, environment: environment)
+            case let statement as NumericLiteral:
+                return NumericValue(value: statement.value)
+            case let statement as CallExpression:
+                return try self.evaluateCallExpression(expr: statement, environment: environment)
+            case let statement as BoolLiteral:
+                return BooleanValue(value: statement.value)
             default:
                 throw JinjaError.runtimeError("Unknown node type: \(statement.type)")
             }

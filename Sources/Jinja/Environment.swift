@@ -27,7 +27,7 @@ class Environment {
     var tests: [String: (any RuntimeValue...) throws -> Bool] = [
         "boolean": {
             args in
-            args[0].type == "BooleanValue"
+            args[0] is BooleanValue
         },
 
         "callable": {
@@ -37,53 +37,68 @@ class Environment {
 
         "odd": {
             args in
-            if args[0].type == "NumericValue" {
+            if let arg = args.first as? NumericValue {
+                return arg.value as! Int % 2 != 0
+            } else {
                 throw JinjaError.runtimeError("Cannot apply test 'odd' to type: \(args.first!.type)")
             }
-
-            return (args[0] as! NumericValue).value as! Int % 2 != 0
         },
         "even": { args in
-            if args[0].type == "NumericValue" {
+            if let arg = args.first as? NumericValue {
+                return arg.value as! Int % 2 == 0
+            } else {
                 throw JinjaError.runtimeError("Cannot apply test 'even' to type: \(args.first!.type)")
             }
-            return (args[0] as! NumericValue).value as! Int % 2 == 0
         },
         "false": { args in
-            args[0].type == "BooleanValue" && !(args[0] as! BooleanValue).value
+            if let arg = args[0] as? BooleanValue {
+                return !arg.value
+            }
+            return false
         },
         "true": { args in
-            args[0].type == "BooleanValue" && (args[0] as! BooleanValue).value
+            if let arg = args[0] as? BooleanValue {
+                return arg.value
+            }
+            return false
         },
         "number": { args in
-            args[0].type == "NumericValue"
+            args[0] is NumericValue
         },
         "integer": { args in
-            args[0].type == "NumericValue" && (args[0] as! NumericValue).value is Int
+            if let arg = args[0] as? NumericValue {
+                return arg.value is Int
+            }
+
+            return false
         },
         "iterable": { args in
             args[0] is ArrayValue || args[0] is StringValue
         },
         "lower": { args in
-            let str = (args[0] as! StringValue).value
-            return args[0].type == "StringValue" && str == str.lowercased()
+            if let arg = args[0] as? StringValue {
+                return arg.value == arg.value.lowercased()
+            }
+
+            return false
         },
         "upper": { args in
-            let str = (args[0] as! StringValue).value
-            return args[0].type == "StringValue" && str == str.uppercased()
+            if let arg = args[0] as? StringValue {
+                return arg.value == arg.value.uppercased()
+            }
+            return false
         },
         "none": { args in
-            args[0].type == "NullValue"
+            args[0] is NullValue
         },
         "defined": { args in
-            args[0].type != "UndefinedValue"
+            !(args[0] is UndefinedValue)
         },
         "undefined": { args in
-            args[0].type != "UndefinedValue"
+            args[0] is UndefinedValue
         },
         "equalto": { _ in
-//            args[0].value == args[1].value
-            false
+            throw JinjaError.notSupportError
         },
     ]
 

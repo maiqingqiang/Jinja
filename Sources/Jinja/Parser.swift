@@ -30,13 +30,12 @@ func parse(tokens: [Token]) throws -> Program {
             if typeof(.equals) {
                 current += 1
 
-                if argument is Identifier {
+                if let identifier = argument as? Identifier {
+                    let value = try parseExpression()
+                    argument = KeywordArgumentExpression(key: identifier, value: value as! Expression)
+                } else {
                     throw JinjaError.syntaxError("Expected identifier for keyword argument")
                 }
-
-                let value = try parseExpression()
-
-                argument = KeywordArgumentExpression(key: argument as! Identifier, value: value as! Expression)
             }
 
             args.append(argument as! Expression)
@@ -193,11 +192,11 @@ func parse(tokens: [Token]) throws -> Program {
                 filter = Identifier(value: String(boolLiteralFlter.value))
             }
 
-            if !(filter is Identifier) {
+            if let test = filter as? Identifier {
+                operand = TestExpression(operand: operand as! Expression, negate: negate, test: test)
+            } else {
                 throw JinjaError.syntaxError("Expected identifier for the test")
             }
-
-            operand = TestExpression(operand: operand as! Expression, negate: negate, test: filter as! Identifier)
         }
         return operand
     }
