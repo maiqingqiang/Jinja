@@ -17,11 +17,13 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "Jinja",
+            path: "Sources",
             swiftSettings: [.enableUpcomingFeature("BareSlashRegexLiterals")]
         ),
         .testTarget(
             name: "JinjaTests",
             dependencies: ["Jinja"],
+            path: "Tests",
             swiftSettings: [.enableUpcomingFeature("BareSlashRegexLiterals")]
         ),
     ]
