@@ -23,3 +23,25 @@ targets: [
     )
 ]
 ```
+
+## Usage
+
+```swift
+import Jinja
+
+let template = """
+{% for item in items %}
+{{ item }}
+{% endfor %}
+"""
+
+let context = [
+    "items": [
+        "item1", 
+        "item2", 
+        "item3"
+    ]
+]
+
+let result = try Template(template: template).render(items: context)
+```
