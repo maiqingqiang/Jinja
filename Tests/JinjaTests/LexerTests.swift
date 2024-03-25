@@ -2306,9 +2306,6 @@ final class LexerTests: XCTestCase {
             let tokens = try tokenize(text)
             XCTAssertNotNil(testParsed[name], "Test case \(name) not found")
             XCTAssertEqual(tokens, testParsed[name], "Test case \(name) failed")
-            for token in tokens {
-                print("type: \(token.type.rawValue), value: \(token.value)")
-            }
         }
     }
 }

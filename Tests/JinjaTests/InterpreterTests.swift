@@ -150,9 +150,6 @@ final class InterpreterTests: XCTestCase {
             let interpreter = Interpreter(env: env)
             let result = try interpreter.run(program: parsed).value as! String
 
-            print("template ->> \(test.template.debugDescription)")
-            print("result ->> \(result.debugDescription) \n\n")
-
             XCTAssertEqual(result.debugDescription, test.target.debugDescription)
         }
     }

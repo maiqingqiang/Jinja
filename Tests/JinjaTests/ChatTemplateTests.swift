@@ -179,9 +179,6 @@ final class ChatTemplateTests: XCTestCase {
             let template = try Template(template: test.chatTemplate)
             let result = try template.render(items: test.data)
 
-            print("template ->> \(test.chatTemplate.debugDescription)")
-            print("result ->> \(result.debugDescription) \n\n")
-
             XCTAssertEqual(result.debugDescription, test.target.debugDescription)
         }
     }
