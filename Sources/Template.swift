@@ -7,15 +7,15 @@
 
 import Foundation
 
-struct Template {
+public struct Template {
     var parsed: Program
 
-    init(template: String) throws {
+    public init(template: String) throws {
         let tokens = try tokenize(template, options: PreprocessOptions(trimBlocks: true, lstripBlocks: true))
         self.parsed = try parse(tokens: tokens)
     }
 
-    func render(items: [String: Any]) throws -> String {
+    public func render(items: [String: Any]) throws -> String {
         let env = Environment()
 
         _ = try env.set(name: "false", value: false)
