@@ -165,10 +165,8 @@ func parse(tokens: [Token]) throws -> Program {
                 filter = try parseCallExpression(callee: filter)
             }
 
-            if let filter = filter as? Identifier {
-                operand = FilterExpression(operand: operand as! Expression, filter: .identifier(filter))
-            } else if let filter = filter as? CallExpression {
-                operand = FilterExpression(operand: operand as! Expression, filter: .callExpression(filter))
+            if let filter = filter as? Filter {
+                operand = FilterExpression(operand: operand as! Expression, filter: filter)
             }
         }
 
@@ -453,10 +451,8 @@ func parse(tokens: [Token]) throws -> Program {
             try body.append(parseAny())
         }
 
-        if let loopVariable = loopVariable as? Identifier {
-            return For(loopvar: .identifier(loopVariable), iterable: iterable as! Expression, body: body)
-        } else if let loopVariable = loopVariable as? TupleLiteral {
-            return For(loopvar: .tupleLiteral(loopVariable), iterable: iterable as! Expression, body: body)
+        if let loopVariable = loopVariable as? Loopvar {
+            return For(loopvar: loopVariable, iterable: iterable as! Expression, body: body)
         }
 
         throw JinjaError.syntaxError("Expected identifier/tuple for the loop variable, got \(loopVariable.type) instead")

@@ -264,10 +264,14 @@ struct Interpreter {
 
                 let current = iterable.value[i]
 
-                switch node.loopvar {
-                case .identifier(let identifier):
+                if let identifier = node.loopvar as? Identifier {
                     _ = try scope.setVariable(name: identifier.value, value: current)
-                case .tupleLiteral(let tupleLiteral):
+                } else {}
+
+                switch node.loopvar {
+                case let identifier as Identifier:
+                    _ = try scope.setVariable(name: identifier.value, value: current)
+                case let tupleLiteral as TupleLiteral:
                     if let current = current as? ArrayValue {
                         if tupleLiteral.value.count != current.value.count {
                             throw JinjaError.runtimeError("Too \(tupleLiteral.value.count > current.value.count ? "few" : "many") items to unpack")
@@ -283,6 +287,8 @@ struct Interpreter {
                     } else {
                         throw JinjaError.runtimeError("Cannot unpack non-iterable type: \(current.type)")
                     }
+                default:
+                    throw JinjaError.notSupportError
                 }
 
                 let evaluated = try self.evaluateBlock(statements: node.body, environment: scope)

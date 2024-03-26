@@ -71,10 +71,9 @@ struct Identifier: Expression {
     var value: String
 }
 
-enum Loopvar {
-    case identifier(Identifier)
-    case tupleLiteral(TupleLiteral)
-}
+protocol Loopvar {}
+extension Identifier: Loopvar {}
+extension TupleLiteral: Loopvar {}
 
 struct For: Statement {
     let type: String = "For"
@@ -103,10 +102,9 @@ struct BinaryExpression: Expression {
     var right: Expression
 }
 
-enum Filter {
-    case identifier(Identifier)
-    case callExpression(CallExpression)
-}
+protocol Filter {}
+extension Identifier: Filter {}
+extension CallExpression: Filter {}
 
 struct FilterExpression: Expression {
     let type: String = "FilterExpression"
