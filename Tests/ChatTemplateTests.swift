@@ -184,8 +184,8 @@ final class ChatTemplateTests: XCTestCase {
 
     func testDefaultTemplates() throws {
         for test in defaultTemplates {
-            let template = try Template(template: test.chatTemplate)
-            let result = try template.render(items: test.data)
+            let template = try Template(test.chatTemplate)
+            let result = try template.render(test.data)
 
             XCTAssertEqual(result.debugDescription, test.target.debugDescription)
         }

@@ -10,12 +10,12 @@ import Foundation
 public struct Template {
     var parsed: Program
 
-    public init(template: String) throws {
+    public init(_ template: String) throws {
         let tokens = try tokenize(template, options: PreprocessOptions(trimBlocks: true, lstripBlocks: true))
         self.parsed = try parse(tokens: tokens)
     }
 
-    public func render(items: [String: Any]) throws -> String {
+    public func render(_ items: [String: Any]) throws -> String {
         let env = Environment()
 
         _ = try env.set(name: "false", value: false)
@@ -24,8 +24,8 @@ public struct Template {
             throw JinjaError.runtimeError("\(args)")
         })
         _ = try env.set(name: "range", value: range)
-        
-        for (key,value) in items {
+
+        for (key, value) in items {
             _ = try env.set(name: key, value: value)
         }
 
