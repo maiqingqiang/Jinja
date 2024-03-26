@@ -43,5 +43,5 @@ let context = [
     ]
 ]
 
-let result = try Template(template: template).render(items: context)
+let result = try Template(template).render(context)
 ```
