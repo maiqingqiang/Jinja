@@ -11,6 +11,7 @@ func parse(tokens: [Token]) throws -> Program {
     var program = Program()
     var current = 0
 
+    @discardableResult
     func expect(type: TokenType, error: String) throws -> Token {
         let prev = tokens[current]
         current += 1
@@ -49,11 +50,11 @@ func parse(tokens: [Token]) throws -> Program {
     }
 
     func parseArgs() throws -> [Statement] {
-        _ = try expect(type: .openParen, error: "Expected opening parenthesis for arguments list")
+        try expect(type: .openParen, error: "Expected opening parenthesis for arguments list")
 
         let args = try parseArgumentsList()
 
-        _ = try expect(type: .closeParen, error: "Expected closing parenthesis for arguments list")
+        try expect(type: .closeParen, error: "Expected closing parenthesis for arguments list")
 
         return args
     }
@@ -127,7 +128,7 @@ func parse(tokens: [Token]) throws -> Program {
 
             if computed {
                 property = try parseMemberExpressionArgumentsList()
-                _ = try expect(type: .closeSquareBracket, error: "Expected closing square bracket")
+                try expect(type: .closeSquareBracket, error: "Expected closing square bracket")
             } else {
                 property = try parsePrimaryExpression()
                 if property.type != "Identifier" {
@@ -280,7 +281,7 @@ func parse(tokens: [Token]) throws -> Program {
         if typeof(.if) {
             current += 1
             let test = try parseLogicalOrExpression()
-            _ = try expect(type: .else, error: "Expected else token")
+            try expect(type: .else, error: "Expected else token")
             let b = try parseLogicalOrExpression()
             return If(test: test as! Expression, body: [a], alternate: [b])
         }
@@ -322,7 +323,7 @@ func parse(tokens: [Token]) throws -> Program {
     func parseIfStatement() throws -> Statement {
         let test = try parseExpression()
 
-        _ = try expect(type: .closeStatement, error: "Expected closing statement token")
+        try expect(type: .closeStatement, error: "Expected closing statement token")
 
         var body: [Statement] = []
         var alternate: [Statement] = []
@@ -335,11 +336,11 @@ func parse(tokens: [Token]) throws -> Program {
         if tokens[current].type == .openStatement, tokens[current+1].type != .endIf {
             current += 1
             if typeof(.elseIf) {
-                _ = try expect(type: .elseIf, error: "Expected elseif token")
+                try expect(type: .elseIf, error: "Expected elseif token")
                 try alternate.append(parseIfStatement())
             } else {
-                _ = try expect(type: .else, error: "Expected else token")
-                _ = try expect(type: .closeStatement, error: "Expected closing statement token")
+                try expect(type: .else, error: "Expected else token")
+                try expect(type: .closeStatement, error: "Expected closing statement token")
 
                 while !(tokens[current].type == .openStatement && tokens[current+1].type == .endIf) {
                     try alternate.append(parseAny())
@@ -390,7 +391,7 @@ func parse(tokens: [Token]) throws -> Program {
             var values: [(Expression, Expression)] = []
             while !typeof(.closeCurlyBracket) {
                 let key = try parseExpression()
-                _ = try expect(type: .colon, error: "Expected colon between key and value in object literal")
+                try expect(type: .colon, error: "Expected colon between key and value in object literal")
                 let value = try parseExpression()
 
                 values.append((key as! Expression, value as! Expression))
@@ -440,11 +441,11 @@ func parse(tokens: [Token]) throws -> Program {
             throw JinjaError.syntaxError("Expected identifier/tuple for the loop variable, got \(loopVariable.type) instead")
         }
 
-        _ = try expect(type: .in, error: "Expected `in` keyword following loop variable")
+        try expect(type: .in, error: "Expected `in` keyword following loop variable")
 
         let iterable = try parseExpression()
 
-        _ = try expect(type: .closeStatement, error: "Expected closing statement token")
+        try expect(type: .closeStatement, error: "Expected closing statement token")
 
         var body: [Statement] = []
         while not(.openStatement, .endFor) {
@@ -459,26 +460,26 @@ func parse(tokens: [Token]) throws -> Program {
     }
 
     func parseJinjaStatement() throws -> Statement {
-        _ = try expect(type: .openStatement, error: "Expected opening statement token")
+        try expect(type: .openStatement, error: "Expected opening statement token")
         var result: Statement
 
         switch tokens[current].type {
         case .set:
             current += 1
             result = try parseSetStatement()
-            _ = try expect(type: .closeStatement, error: "Expected closing statement token")
+            try expect(type: .closeStatement, error: "Expected closing statement token")
         case .if:
             current += 1
             result = try parseIfStatement()
-            _ = try expect(type: .openStatement, error: "Expected {% token")
-            _ = try expect(type: .endIf, error: "Expected endif token")
-            _ = try expect(type: .closeStatement, error: "Expected %} token")
+            try expect(type: .openStatement, error: "Expected {% token")
+            try expect(type: .endIf, error: "Expected endif token")
+            try expect(type: .closeStatement, error: "Expected %} token")
         case .for:
             current += 1
             result = try parseForStatement()
-            _ = try expect(type: .openStatement, error: "Expected {% token")
-            _ = try expect(type: .endFor, error: "Expected endfor token")
-            _ = try expect(type: .closeStatement, error: "Expected %} token")
+            try expect(type: .openStatement, error: "Expected {% token")
+            try expect(type: .endFor, error: "Expected endfor token")
+            try expect(type: .closeStatement, error: "Expected %} token")
         default:
             throw JinjaError.syntaxError("Unknown statement type: \(tokens[current].type)")
         }
@@ -487,11 +488,11 @@ func parse(tokens: [Token]) throws -> Program {
     }
 
     func parseJinjaExpression() throws -> Statement {
-        _ = try expect(type: .openExpression, error: "Expected opening expression token")
+        try expect(type: .openExpression, error: "Expected opening expression token")
 
         let result = try parseExpression()
 
-        _ = try expect(type: .closeExpression, error: "Expected closing expression token")
+        try expect(type: .closeExpression, error: "Expected closing expression token")
 
         return result
     }

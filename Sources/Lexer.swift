@@ -162,6 +162,7 @@ func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()
 
     var cursorPosition = 0
 
+    @discardableResult
     func consumeWhile(predicate: (String) -> Bool) throws -> String {
         var str = ""
         while cursorPosition < src.count, predicate(String(src[cursorPosition])) {
@@ -207,7 +208,7 @@ func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()
             }
         }
 
-        _ = try consumeWhile(predicate: isWhile)
+        try consumeWhile(predicate: isWhile)
 
         let char = String(src[cursorPosition])
 

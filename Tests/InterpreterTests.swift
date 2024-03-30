@@ -139,10 +139,10 @@ final class InterpreterTests: XCTestCase {
     func testRender() throws {
         for test in tests {
             let env = Environment()
-            _ = try env.set(name: "True", value: true)
+            try env.set(name: "True", value: true)
 
             for (key, value) in test.data {
-                _ = try env.set(name: key, value: value)
+                try env.set(name: key, value: value)
             }
 
             let tokens = try tokenize(test.template, options: test.options)

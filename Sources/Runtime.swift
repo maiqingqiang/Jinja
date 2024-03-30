@@ -211,7 +211,7 @@ struct Interpreter {
         let rhs = try self.evaluate(statement: node.value, environment: environment)
         if let identifier = node.assignee as? Identifier {
             let variableName = identifier.value
-            _ = try environment.setVariable(name: variableName, value: rhs)
+            try environment.setVariable(name: variableName, value: rhs)
         } else if let member = node.assignee as? MemberExpression {
             let object = try self.evaluate(statement: member.object, environment: environment)
 
@@ -260,17 +260,17 @@ struct Interpreter {
                     "nextitem": i < iterable.value.count - 1 ? iterable.value[i + 1] : UndefinedValue(),
                 ]
 
-                _ = try scope.setVariable(name: "loop", value: ObjectValue(value: loop))
+                try scope.setVariable(name: "loop", value: ObjectValue(value: loop))
 
                 let current = iterable.value[i]
 
                 if let identifier = node.loopvar as? Identifier {
-                    _ = try scope.setVariable(name: identifier.value, value: current)
+                    try scope.setVariable(name: identifier.value, value: current)
                 } else {}
 
                 switch node.loopvar {
                 case let identifier as Identifier:
-                    _ = try scope.setVariable(name: identifier.value, value: current)
+                    try scope.setVariable(name: identifier.value, value: current)
                 case let tupleLiteral as TupleLiteral:
                     if let current = current as? ArrayValue {
                         if tupleLiteral.value.count != current.value.count {
@@ -279,7 +279,7 @@ struct Interpreter {
 
                         for j in 0 ..< tupleLiteral.value.count {
                             if let identifier = tupleLiteral.value[j] as? Identifier {
-                                _ = try scope.setVariable(name: identifier.value, value: current.value[j])
+                                try scope.setVariable(name: identifier.value, value: current.value[j])
                             } else {
                                 throw JinjaError.runtimeError("Cannot unpack non-identifier type: \(tupleLiteral.value[j].type)")
                             }
@@ -324,7 +324,11 @@ struct Interpreter {
                 throw JinjaError.runtimeError("Unknown left value type:\(type(of: left.value)), right value type:\(type(of: right.value))")
             }
         } else if node.operation.value == "!=" {
-            return BooleanValue(value: left.value as! AnyHashable != right.value as! AnyHashable)
+            if type(of: left) != type(of: right) {
+                return BooleanValue(value: true)
+            } else {
+                return BooleanValue(value: left.value as! AnyHashable != right.value as! AnyHashable)
+            }
         }
 
         if left is UndefinedValue || right is UndefinedValue {

@@ -168,6 +168,7 @@ class Environment {
         }
     }
 
+    @discardableResult
     func set(name: String, value: Any) throws -> any RuntimeValue {
         try self.declareVariable(name: name, value: self.convertToRuntimeValues(input: value))
     }
@@ -182,6 +183,7 @@ class Environment {
         return value
     }
 
+    @discardableResult
     func setVariable(name: String, value: any RuntimeValue) throws -> any RuntimeValue {
         self.variables[name] = value
         return value
