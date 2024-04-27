@@ -5,8 +5,9 @@
 //  Created by John Mai on 2024/3/21.
 //
 
-@testable import Jinja
 import XCTest
+
+@testable import Jinja
 
 final class ParseTests: XCTestCase {
     func testParse() throws {

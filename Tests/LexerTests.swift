@@ -5,8 +5,10 @@
 //  Created by John Mai on 2024/3/20.
 //
 
-@testable import Jinja
 import XCTest
+
+@testable import Jinja
+
 final class LexerTests: XCTestCase {
     let testStrings: [String: String] = [
         // Text nodes
@@ -18,16 +20,21 @@ final class LexerTests: XCTestCase {
         "LOGICAL_OR": "{{ true or true }}{{ true or false }}{{ false or true }}{{ false or false }}",
         "LOGICAL_NOT": "{{ not true }}{{ not false }}",
         "LOGICAL_NOT_NOT": "{{ not not true }}{{ not not false }}",
-        "LOGICAL_AND_OR": "{{ true and true or false }}{{ true and false or true }}{{ false and true or true }}{{ false and false or true }}{{ false and false or false }}",
-        "LOGICAL_AND_NOT": "{{ true and not true }}{{ true and not false }}{{ false and not true }}{{ false and not false }}",
-        "LOGICAL_OR_NOT": "{{ true or not true }}{{ true or not false }}{{ false or not true }}{{ false or not false }}",
+        "LOGICAL_AND_OR":
+            "{{ true and true or false }}{{ true and false or true }}{{ false and true or true }}{{ false and false or true }}{{ false and false or false }}",
+        "LOGICAL_AND_NOT":
+            "{{ true and not true }}{{ true and not false }}{{ false and not true }}{{ false and not false }}",
+        "LOGICAL_OR_NOT":
+            "{{ true or not true }}{{ true or not false }}{{ false or not true }}{{ false or not false }}",
         "LOGICAL_COMBINED": "{{ 1 == 2 and 2 == 2 }}{{ 1 == 2 or 2 == 2}}",
 
         // If statements
         "IF_ONLY": "{% if 1 == 1 %}{{ 'A' }}{% endif %}{{ 'B' }}",
         "IF_ELSE_ONLY": "{% if 1 == 2 %}{{ 'A' }}{% else %}{{ 'B' }}{% endif %}{{ 'C' }}",
-        "IF_ELIF_ELSE": "{% if 1 == 2 %}{{ 'A' }}{{ 'B' }}{{ 'C' }}{% elif 1 == 2 %}{{ 'D' }}{% elif 1 == 3 %}{{ 'E' }}{{ 'F' }}{% else %}{{ 'G' }}{{ 'H' }}{{ 'I' }}{% endif %}{{ 'J' }}",
-        "NESTED_STATEMENTS": "{% set a = 0 %}{% set b = 0 %}{% set c = 0 %}{% set d = 0 %}{% if 1 == 1 %}{% set a = 2 %}{% set b = 3 %}{% elif 1 == 2 %}{% set c = 4 %}{% else %}{% set d = 5 %}{% endif %}{{ a }}{{ b }}{{ c }}{{ d }}",
+        "IF_ELIF_ELSE":
+            "{% if 1 == 2 %}{{ 'A' }}{{ 'B' }}{{ 'C' }}{% elif 1 == 2 %}{{ 'D' }}{% elif 1 == 3 %}{{ 'E' }}{{ 'F' }}{% else %}{{ 'G' }}{{ 'H' }}{{ 'I' }}{% endif %}{{ 'J' }}",
+        "NESTED_STATEMENTS":
+            "{% set a = 0 %}{% set b = 0 %}{% set c = 0 %}{% set d = 0 %}{% if 1 == 1 %}{% set a = 2 %}{% set b = 3 %}{% elif 1 == 2 %}{% set c = 4 %}{% else %}{% set d = 5 %}{% endif %}{{ a }}{{ b }}{{ c }}{{ d }}",
 
         // For loops
         "FOR_LOOP": "{% for message in messages %}{{ message['content'] }}{% endfor %}",
@@ -55,45 +62,60 @@ final class LexerTests: XCTestCase {
 
         // Object methods
         "OBJ_METHODS": "{{ obj.x(x, y) }}{{ ' ' + obj.x() + ' ' }}{{ obj.z[x](x, y) }}",
-        "STRING_METHODS": "{{ '  A  '.strip() }}{% set x = '  B  ' %}{{ x.strip() }}{% set y = ' aBcD ' %}{{ y.upper() }}{{ y.lower() }}",
+        "STRING_METHODS":
+            "{{ '  A  '.strip() }}{% set x = '  B  ' %}{{ x.strip() }}{% set y = ' aBcD ' %}{{ y.upper() }}{{ y.lower() }}",
         "STRING_METHODS_2": "{{ 'test test'.title() }}",
 
         // String indexing and slicing
         "STRING_SLICING": "|{{ x[0] }}|{{ x[:] }}|{{ x[:3] }}|{{ x[1:4] }}|{{ x[1:-1] }}|{{ x[1::2] }}|{{ x[5::-1] }}|",
 
         // Array indexing and slicing
-        "ARRAY_SLICING": "|{{ strings[0] }}|{% for s in strings[:] %}{{ s }}{% endfor %}|{% for s in strings[:3] %}{{ s }}{% endfor %}|{% for s in strings[1:4] %}{{ s }}{% endfor %}|{% for s in strings[1:-1] %}{{ s }}{% endfor %}|{% for s in strings[1::2] %}{{ s }}{% endfor %}|{% for s in strings[5::-1] %}{{ s }}{% endfor %}|",
+        "ARRAY_SLICING":
+            "|{{ strings[0] }}|{% for s in strings[:] %}{{ s }}{% endfor %}|{% for s in strings[:3] %}{{ s }}{% endfor %}|{% for s in strings[1:4] %}{{ s }}{% endfor %}|{% for s in strings[1:-1] %}{{ s }}{% endfor %}|{% for s in strings[1::2] %}{{ s }}{% endfor %}|{% for s in strings[5::-1] %}{{ s }}{% endfor %}|",
 
         // Membership operators
-        "MEMBERSHIP": "|{{ 0 in arr }}|{{ 1 in arr }}|{{ true in arr }}|{{ false in arr }}|{{ 'a' in arr }}|{{ 'b' in arr }}|",
-        "MEMBERSHIP_NEGATION_1": "|{{ not 0 in arr }}|{{ not 1 in arr }}|{{ not true in arr }}|{{ not false in arr }}|{{ not 'a' in arr }}|{{ not 'b' in arr }}|",
-        "MEMBERSHIP_NEGATION_2": "|{{ 0 not in arr }}|{{ 1 not in arr }}|{{ true not in arr }}|{{ false not in arr }}|{{ 'a' not in arr }}|{{ 'b' not in arr }}|",
+        "MEMBERSHIP":
+            "|{{ 0 in arr }}|{{ 1 in arr }}|{{ true in arr }}|{{ false in arr }}|{{ 'a' in arr }}|{{ 'b' in arr }}|",
+        "MEMBERSHIP_NEGATION_1":
+            "|{{ not 0 in arr }}|{{ not 1 in arr }}|{{ not true in arr }}|{{ not false in arr }}|{{ not 'a' in arr }}|{{ not 'b' in arr }}|",
+        "MEMBERSHIP_NEGATION_2":
+            "|{{ 0 not in arr }}|{{ 1 not in arr }}|{{ true not in arr }}|{{ false not in arr }}|{{ 'a' not in arr }}|{{ 'b' not in arr }}|",
 
         // Escaped characters
         "ESCAPED_CHARS": "{{ '\\n' }}{{ '\\t' }}{{ '\\'' }}{{ '\\\"' }}{{ '\\\\' }}{{ '|\\n|\\t|\\'|\\\"|\\\\|' }}",
 
         // Substring inclusion
-        "SUBSTRING_INCLUSION": "|{{ '' in 'abc' }}|{{ 'a' in 'abc' }}|{{ 'd' in 'abc' }}|{{ 'ab' in 'abc' }}|{{ 'ac' in 'abc' }}|{{ 'abc' in 'abc' }}|{{ 'abcd' in 'abc' }}|",
+        "SUBSTRING_INCLUSION":
+            "|{{ '' in 'abc' }}|{{ 'a' in 'abc' }}|{{ 'd' in 'abc' }}|{{ 'ab' in 'abc' }}|{{ 'ac' in 'abc' }}|{{ 'abc' in 'abc' }}|{{ 'abcd' in 'abc' }}|",
 
         // Filter operator
         "FILTER_OPERATOR": "{{ arr | length }}{{ 1 + arr | length }}{{ 2 + arr | sort | length }}{{ (arr | sort)[0] }}",
-        "FILTER_OPERATOR_2": "|{{ 'abc' | length }}|{{ 'aBcD' | upper }}|{{ 'aBcD' | lower }}|{{ 'test test' | capitalize}}|{{ 'test test' | title }}|{{ ' a b ' | trim }}|{{ '  A  B  ' | trim | lower | length }}|",
+        "FILTER_OPERATOR_2":
+            "|{{ 'abc' | length }}|{{ 'aBcD' | upper }}|{{ 'aBcD' | lower }}|{{ 'test test' | capitalize}}|{{ 'test test' | title }}|{{ ' a b ' | trim }}|{{ '  A  B  ' | trim | lower | length }}|",
         "FILTER_OPERATOR_3": "|{{ -1 | abs }}|{{ 1 | abs }}|",
         "FILTER_OPERATOR_4": "{{ items | selectattr('key') | length }}",
         "FILTER_OPERATOR_5": "{{ messages | selectattr('role', 'equalto', 'system') | length }}",
         "FILTER_OPERATOR_6": "|{{ obj | length }}|{{ (obj | items)[1:] | length }}|",
 
         // Logical operators between non-Booleans
-        "BOOLEAN_NUMERICAL": "|{{ 1 and 2 }}|{{ 1 and 0 }}|{{ 0 and 1 }}|{{ 0 and 0 }}|{{ 1 or 2 }}|{{ 1 or 0 }}|{{ 0 or 1 }}|{{ 0 or 0 }}|{{ not 1 }}|{{ not 0 }}|",
-        "BOOLEAN_STRINGS": "|{{ 'a' and 'b' }}|{{ 'a' and '' }}|{{ '' and 'a' }}|{{ '' and '' }}|{{ 'a' or 'b' }}|{{ 'a' or '' }}|{{ '' or 'a' }}|{{ '' or '' }}|{{ not 'a' }}|{{ not '' }}|",
-        "BOOLEAN_MIXED": "|{{ true and 1 }}|{{ true and 0 }}|{{ false and 1 }}|{{ false and 0 }}|{{ true or 1 }}|{{ true or 0 }}|{{ false or 1 }}|{{ false or 0 }}|",
-        "BOOLEAN_MIXED_2": "|{{ true and '' }}|{{ true and 'a' }}|{{ false or '' }}|{{ false or 'a' }}|{{ '' and true }}|{{ 'a' and true }}|{{ '' or false }}|{{ 'a' or false }}|",
-        "BOOLEAN_MIXED_IF": "{% if '' %}{{ 'A' }}{% endif %}{% if 'a' %}{{ 'B' }}{% endif %}{% if true and '' %}{{ 'C' }}{% endif %}{% if true and 'a' %}{{ 'D' }}{% endif %}",
+        "BOOLEAN_NUMERICAL":
+            "|{{ 1 and 2 }}|{{ 1 and 0 }}|{{ 0 and 1 }}|{{ 0 and 0 }}|{{ 1 or 2 }}|{{ 1 or 0 }}|{{ 0 or 1 }}|{{ 0 or 0 }}|{{ not 1 }}|{{ not 0 }}|",
+        "BOOLEAN_STRINGS":
+            "|{{ 'a' and 'b' }}|{{ 'a' and '' }}|{{ '' and 'a' }}|{{ '' and '' }}|{{ 'a' or 'b' }}|{{ 'a' or '' }}|{{ '' or 'a' }}|{{ '' or '' }}|{{ not 'a' }}|{{ not '' }}|",
+        "BOOLEAN_MIXED":
+            "|{{ true and 1 }}|{{ true and 0 }}|{{ false and 1 }}|{{ false and 0 }}|{{ true or 1 }}|{{ true or 0 }}|{{ false or 1 }}|{{ false or 0 }}|",
+        "BOOLEAN_MIXED_2":
+            "|{{ true and '' }}|{{ true and 'a' }}|{{ false or '' }}|{{ false or 'a' }}|{{ '' and true }}|{{ 'a' and true }}|{{ '' or false }}|{{ 'a' or false }}|",
+        "BOOLEAN_MIXED_IF":
+            "{% if '' %}{{ 'A' }}{% endif %}{% if 'a' %}{{ 'B' }}{% endif %}{% if true and '' %}{{ 'C' }}{% endif %}{% if true and 'a' %}{{ 'D' }}{% endif %}",
 
         // Tests (is operator)
-        "IS_OPERATOR": "|{{ unknown_var is defined }}|{{ unknown_var is not defined }}|{{ known_var is defined }}|{{ known_var is not defined }}|",
-        "IS_OPERATOR_2": "|{{ true is true }}|{{ true is not true }}|{{ true is false }}|{{ true is not false }}|{{ true is boolean }}|{{ 1 is boolean }}|",
-        "IS_OPERATOR_3": "|{{ 1 is odd }}|{{ 2 is odd }}|{{ 1 is even }}|{{ 2 is even }}|{{ 2 is number }}|{{ '2' is number }}|{{ 2 is integer }}|{{ '2' is integer }}|",
+        "IS_OPERATOR":
+            "|{{ unknown_var is defined }}|{{ unknown_var is not defined }}|{{ known_var is defined }}|{{ known_var is not defined }}|",
+        "IS_OPERATOR_2":
+            "|{{ true is true }}|{{ true is not true }}|{{ true is false }}|{{ true is not false }}|{{ true is boolean }}|{{ 1 is boolean }}|",
+        "IS_OPERATOR_3":
+            "|{{ 1 is odd }}|{{ 2 is odd }}|{{ 1 is even }}|{{ 2 is even }}|{{ 2 is number }}|{{ '2' is number }}|{{ 2 is integer }}|{{ '2' is integer }}|",
         "IS_OPERATOR_4": "|{{ func is callable }}|{{ 2 is callable }}|{{ 1 is iterable }}|{{ 'hello' is iterable }}|",
         "IS_OPERATOR_5": "|{{ 'a' is lower }}|{{ 'A' is lower }}|{{ 'a' is upper }}|{{ 'A' is upper }}|",
 
@@ -107,20 +129,25 @@ final class LexerTests: XCTestCase {
         "NAMESPACE_2": "{% set ns = namespace(default=false, number=1+1) %}|{{ ns.default }}|{{ ns.number }}|",
 
         // Object operators
-        "OBJECT_OPERATORS": "|{{ 'known' in obj }}|{{ 'known' not in obj }}|{{ 'unknown' in obj }}|{{ 'unknown' not in obj }}|",
-        "OBJECT_OPERATORS_1": "|{{ obj.get('known') }}|{{ obj.get('unknown') is none }}|{{ obj.get('unknown') is defined }}|",
+        "OBJECT_OPERATORS":
+            "|{{ 'known' in obj }}|{{ 'known' not in obj }}|{{ 'unknown' in obj }}|{{ 'unknown' not in obj }}|",
+        "OBJECT_OPERATORS_1":
+            "|{{ obj.get('known') }}|{{ obj.get('unknown') is none }}|{{ obj.get('unknown') is defined }}|",
         "OBJECT_OPERATORS_2": "|{% for x, y in obj.items() %}|{{ x + ' ' + y }}|{% endfor %}|",
 
         // Scope
-        "SCOPE": "{% set ns = namespace(found=false) %}{% for num in nums %}{% if num == 1 %}{{ 'found=' }}{% set ns.found = true %}{% endif %}{% endfor %}{{ ns.found }}",
-        "SCOPE_1": "{% set found = false %}{% for num in nums %}{% if num == 1 %}{{ 'found=' }}{% set found = true %}{% endif %}{% endfor %}{{ found }}",
+        "SCOPE":
+            "{% set ns = namespace(found=false) %}{% for num in nums %}{% if num == 1 %}{{ 'found=' }}{% set ns.found = true %}{% endif %}{% endfor %}{{ ns.found }}",
+        "SCOPE_1":
+            "{% set found = false %}{% for num in nums %}{% if num == 1 %}{{ 'found=' }}{% set found = true %}{% endif %}{% endfor %}{{ found }}",
 
         // Undefined
         "UNDEFINED_VARIABLES": "{{ undefined_variable }}",
         "UNDEFINED_ACCESS": "{{ object.undefined_attribute }}",
 
         // Ternary operator
-        "TERNARY_OPERATOR": "|{{ 'a' if true else 'b' }}|{{ 'a' if false else 'b' }}|{{ 'a' if 1 + 1 == 2 else 'b' }}|{{ 'a' if 1 + 1 == 3 or 1 * 2 == 3 else 'b' }}|",
+        "TERNARY_OPERATOR":
+            "|{{ 'a' if true else 'b' }}|{{ 'a' if false else 'b' }}|{{ 'a' if 1 + 1 == 2 else 'b' }}|{{ 'a' if 1 + 1 == 3 or 1 * 2 == 3 else 'b' }}|",
 
         // Array literals
         "ARRAY_LITERALS": "{{ [1, true, 'hello', [1, 2, 3, 4], var] | length }}",

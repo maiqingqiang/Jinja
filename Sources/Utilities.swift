@@ -28,7 +28,8 @@ func slice<T>(_ array: [T], start: Int? = nil, stop: Int? = nil, step: Int? = 1)
         for i in stride(from: startIndex, to: stopIndex, by: step) {
             slicedArray.append(array[i])
         }
-    } else {
+    }
+    else {
         let startIndex = startValue < 0 ? max(arrayCount + startValue, -1) : min(startValue, arrayCount - 1)
         let stopIndex = stopValue < -1 ? max(arrayCount + stopValue, -1) : min(stopValue, arrayCount - 1)
         for i in stride(from: startIndex, through: stopIndex, by: step) {

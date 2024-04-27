@@ -5,8 +5,9 @@
 //  Created by John Mai on 2024/3/23.
 //
 
-@testable import Jinja
 import XCTest
+
+@testable import Jinja
 
 let exampleIfTemplate = "<div>\n    {% if True %}\n        yay\n    {% endif %}\n</div>"
 
@@ -63,7 +64,7 @@ final class InterpreterTests: XCTestCase {
             data: [
                 "seq": seq
             ],
-            options:.init( lstripBlocks: true),
+            options: .init(lstripBlocks: true),
             target: "\n    1\n\n    2\n\n    3\n\n    4\n\n    5\n\n    6\n\n    7\n\n    8\n\n    9\n"
         ),
         Test(
@@ -71,7 +72,7 @@ final class InterpreterTests: XCTestCase {
             data: [
                 "seq": seq
             ],
-            options:.init( trimBlocks: true),
+            options: .init(trimBlocks: true),
             target: "    1\n    2\n    3\n    4\n    5\n    6\n    7\n    8\n    9\n"
         ),
         Test(
@@ -79,7 +80,7 @@ final class InterpreterTests: XCTestCase {
             data: [
                 "seq": seq
             ],
-            options:.init(trimBlocks: true, lstripBlocks: true),
+            options: .init(trimBlocks: true, lstripBlocks: true),
             target: "    1\n    2\n    3\n    4\n    5\n    6\n    7\n    8\n    9\n"
         ),
         Test(
@@ -101,7 +102,7 @@ final class InterpreterTests: XCTestCase {
             data: [
                 "seq": seq
             ],
-            options:.init(trimBlocks: true),
+            options: .init(trimBlocks: true),
             target: "    1    2    3    4    5    6    7    8    9"
         ),
         Test(
@@ -119,21 +120,21 @@ final class InterpreterTests: XCTestCase {
         Test(
             template: exampleCommentTemplate,
             data: [:],
-            options:.init(lstripBlocks: true),
+            options: .init(lstripBlocks: true),
             target: "\n"
         ),
         Test(
             template: exampleCommentTemplate,
             data: [:],
-            options:.init(trimBlocks: true),
+            options: .init(trimBlocks: true),
             target: "      "
         ),
         Test(
             template: exampleCommentTemplate,
             data: [:],
-            options:.init(trimBlocks: true, lstripBlocks: true),
+            options: .init(trimBlocks: true, lstripBlocks: true),
             target: ""
-        )
+        ),
     ]
 
     func testRender() throws {

@@ -21,7 +21,7 @@ class Environment {
             }
 
             return args[0]
-        }),
+        })
     ]
 
     var tests: [String: (any RuntimeValue...) throws -> Bool] = [
@@ -39,14 +39,16 @@ class Environment {
             args in
             if let arg = args.first as? NumericValue {
                 return arg.value as! Int % 2 != 0
-            } else {
+            }
+            else {
                 throw JinjaError.runtimeError("Cannot apply test 'odd' to type: \(args.first!.type)")
             }
         },
         "even": { args in
             if let arg = args.first as? NumericValue {
                 return arg.value as! Int % 2 == 0
-            } else {
+            }
+            else {
                 throw JinjaError.runtimeError("Cannot apply test 'even' to type: \(args.first!.type)")
             }
         },
@@ -205,10 +207,12 @@ class Environment {
         do {
             if let value = try self.resolve(name: name).variables[name] {
                 return value
-            } else {
+            }
+            else {
                 return UndefinedValue()
             }
-        } catch {
+        }
+        catch {
             return UndefinedValue()
         }
     }

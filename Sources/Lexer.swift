@@ -70,7 +70,7 @@ let keywords: [String: TokenType] = [
     "or": .or,
     "not": .not,
     "true": .booleanLiteral,
-    "false": .booleanLiteral
+    "false": .booleanLiteral,
 ]
 
 func isWord(char: String) -> Bool {
@@ -111,7 +111,7 @@ let orderedMappingTable: [(String, TokenType)] = [
     ("*", .multiplicativeBinaryOperator),
     ("/", .multiplicativeBinaryOperator),
     ("%", .multiplicativeBinaryOperator),
-    ("=", .equals)
+    ("=", .equals),
 ]
 
 let escapeCharacters: [String: String] = [
@@ -123,7 +123,7 @@ let escapeCharacters: [String: String] = [
     "v": "\u{000B}",
     "'": "'",
     "\"": "\"",
-    "\\": "\\"
+    "\\": "\\",
 ]
 
 struct PreprocessOptions {
@@ -148,7 +148,8 @@ func preprocess(template: String, options: PreprocessOptions = PreprocessOptions
         template = template.replacing(/([#%]})\n/, with: { $0.output.1 })
     }
 
-    return template
+    return
+        template
         .replacing(/{##}/, with: "")
         .replacing(/-%}\s*/, with: "%}")
         .replacing(/\s*{%-/, with: "{%")
@@ -197,7 +198,9 @@ func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()
         if lastTokenType == nil || lastTokenType == .closeStatement || lastTokenType == .closeExpression {
             var text = ""
 
-            while cursorPosition < src.count, !(src[cursorPosition] == "{" && (src[cursorPosition + 1] == "%" || src[cursorPosition + 1] == "{")) {
+            while cursorPosition < src.count,
+                !(src[cursorPosition] == "{" && (src[cursorPosition + 1] == "%" || src[cursorPosition + 1] == "{"))
+            {
                 text.append(src[cursorPosition])
                 cursorPosition += 1
             }
@@ -221,11 +224,11 @@ func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()
 
             switch lastTokenType {
             case .identifier,
-                 .numericLiteral,
-                 .booleanLiteral,
-                 .stringLiteral,
-                 .closeParen,
-                 .closeSquareBracket:
+                .numericLiteral,
+                .booleanLiteral,
+                .stringLiteral,
+                .closeParen,
+                .closeSquareBracket:
                 break
 
             default:
@@ -272,7 +275,8 @@ func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()
             if type == .in, tokens.last?.type == .not {
                 _ = tokens.popLast()
                 tokens.append(Token(value: "not in", type: .notIn))
-            } else {
+            }
+            else {
                 tokens.append(Token(value: word, type: type))
             }
 

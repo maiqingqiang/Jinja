@@ -34,7 +34,8 @@ func parse(tokens: [Token]) throws -> Program {
                 if let identifier = argument as? Identifier {
                     let value = try parseExpression()
                     argument = KeywordArgumentExpression(key: identifier, value: value as! Expression)
-                } else {
+                }
+                else {
                     throw JinjaError.syntaxError("Expected identifier for keyword argument")
                 }
             }
@@ -88,7 +89,8 @@ func parse(tokens: [Token]) throws -> Program {
                 slices.append(nil)
                 current += 1
                 isSlice = true
-            } else {
+            }
+            else {
                 try slices.append(parseExpression())
                 if typeof(.colon) {
                     current += 1
@@ -129,14 +131,19 @@ func parse(tokens: [Token]) throws -> Program {
             if computed {
                 property = try parseMemberExpressionArgumentsList()
                 try expect(type: .closeSquareBracket, error: "Expected closing square bracket")
-            } else {
+            }
+            else {
                 property = try parsePrimaryExpression()
                 if property.type != "Identifier" {
                     throw JinjaError.syntaxError("Expected identifier following dot operator")
                 }
             }
 
-            object = MemberExpression(object: object as! Expression, property: property as! Expression, computed: computed)
+            object = MemberExpression(
+                object: object as! Expression,
+                property: property as! Expression,
+                computed: computed
+            )
         }
 
         return object
@@ -193,7 +200,8 @@ func parse(tokens: [Token]) throws -> Program {
 
             if let test = filter as? Identifier {
                 operand = TestExpression(operand: operand as! Expression, negate: negate, test: test)
-            } else {
+            }
+            else {
                 throw JinjaError.syntaxError("Expected identifier for the test")
             }
         }
@@ -247,7 +255,8 @@ func parse(tokens: [Token]) throws -> Program {
 
         if let right {
             return right
-        } else {
+        }
+        else {
             return try parseComparisonExpression()
         }
     }
@@ -294,12 +303,12 @@ func parse(tokens: [Token]) throws -> Program {
     }
 
     func typeof(_ types: TokenType...) -> Bool {
-        guard current+types.count <= tokens.count else {
+        guard current + types.count <= tokens.count else {
             return false
         }
 
         for (index, type) in types.enumerated() {
-            if type != tokens[current+index].type {
+            if type != tokens[current + index].type {
                 return false
             }
         }
@@ -328,21 +337,23 @@ func parse(tokens: [Token]) throws -> Program {
         var body: [Statement] = []
         var alternate: [Statement] = []
 
-        while !(tokens[current].type == .openStatement && (
-            tokens[current+1].type == .elseIf || tokens[current+1].type == .else || tokens[current+1].type == .endIf))
+        while !(tokens[current].type == .openStatement
+            && (tokens[current + 1].type == .elseIf || tokens[current + 1].type == .else
+                || tokens[current + 1].type == .endIf))
         {
             try body.append(parseAny())
         }
-        if tokens[current].type == .openStatement, tokens[current+1].type != .endIf {
+        if tokens[current].type == .openStatement, tokens[current + 1].type != .endIf {
             current += 1
             if typeof(.elseIf) {
                 try expect(type: .elseIf, error: "Expected elseif token")
                 try alternate.append(parseIfStatement())
-            } else {
+            }
+            else {
                 try expect(type: .else, error: "Expected else token")
                 try expect(type: .closeStatement, error: "Expected closing statement token")
 
-                while !(tokens[current].type == .openStatement && tokens[current+1].type == .endIf) {
+                while !(tokens[current].type == .openStatement && tokens[current + 1].type == .endIf) {
                     try alternate.append(parseAny())
                 }
             }
@@ -425,12 +436,12 @@ func parse(tokens: [Token]) throws -> Program {
     }
 
     func not(_ types: TokenType...) -> Bool {
-        guard current+types.count <= tokens.count else {
+        guard current + types.count <= tokens.count else {
             return false
         }
 
         return types.enumerated().contains { i, type -> Bool in
-            type != tokens[current+i].type
+            type != tokens[current + i].type
         }
     }
 
@@ -438,7 +449,9 @@ func parse(tokens: [Token]) throws -> Program {
         let loopVariable = try parseExpressionSequence(primary: true)
 
         if !(loopVariable is Identifier || loopVariable is TupleLiteral) {
-            throw JinjaError.syntaxError("Expected identifier/tuple for the loop variable, got \(loopVariable.type) instead")
+            throw JinjaError.syntaxError(
+                "Expected identifier/tuple for the loop variable, got \(loopVariable.type) instead"
+            )
         }
 
         try expect(type: .in, error: "Expected `in` keyword following loop variable")
@@ -456,7 +469,9 @@ func parse(tokens: [Token]) throws -> Program {
             return For(loopvar: loopVariable, iterable: iterable as! Expression, body: body)
         }
 
-        throw JinjaError.syntaxError("Expected identifier/tuple for the loop variable, got \(loopVariable.type) instead")
+        throw JinjaError.syntaxError(
+            "Expected identifier/tuple for the loop variable, got \(loopVariable.type) instead"
+        )
     }
 
     func parseJinjaStatement() throws -> Statement {
