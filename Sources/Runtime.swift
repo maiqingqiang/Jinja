@@ -235,7 +235,7 @@ struct Interpreter {
             }
         }
         else {
-            throw JinjaError.runtimeError("Invalid assignee type: \(node.assignee.type)")
+            throw JinjaError.runtimeError("Invalid assignee type: \(type(of: node.assignee))")
         }
 
         return NullValue()
@@ -297,7 +297,7 @@ struct Interpreter {
                             }
                             else {
                                 throw JinjaError.runtimeError(
-                                    "Cannot unpack non-identifier type: \(tupleLiteral.value[j].type)"
+                                    "Cannot unpack non-identifier type: \(type(of:tupleLiteral.value[j]))"
                                 )
                             }
                         }
@@ -480,7 +480,6 @@ struct Interpreter {
                     step: step.value as? Int
                 )
             )
-
         }
         else if let object = object as? StringValue {
             return StringValue(
@@ -570,7 +569,7 @@ struct Interpreter {
                 return BooleanValue(value: !argument.value)
             }
 
-            throw JinjaError.syntaxError("Unknown argument type: \(node.argument.type)")
+            throw JinjaError.syntaxError("Unknown argument type: \(type(of:node.argument))")
         default:
             throw JinjaError.syntaxError("Unknown operator: \(node.operation.value)")
         }
@@ -707,7 +706,7 @@ struct Interpreter {
             case let statement as FilterExpression:
                 return try self.evaluateFilterExpression(node: statement, environment: environment)
             default:
-                throw JinjaError.runtimeError("Unknown node type: \(statement.type)")
+                throw JinjaError.runtimeError("Unknown node type: \(type(of:statement))")
             }
         }
         else {

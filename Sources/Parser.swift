@@ -134,7 +134,7 @@ func parse(tokens: [Token]) throws -> Program {
             }
             else {
                 property = try parsePrimaryExpression()
-                if property.type != "Identifier" {
+                if !(property is Identifier) {
                     throw JinjaError.syntaxError("Expected identifier following dot operator")
                 }
             }
@@ -450,7 +450,7 @@ func parse(tokens: [Token]) throws -> Program {
 
         if !(loopVariable is Identifier || loopVariable is TupleLiteral) {
             throw JinjaError.syntaxError(
-                "Expected identifier/tuple for the loop variable, got \(loopVariable.type) instead"
+                "Expected identifier/tuple for the loop variable, got \(type(of:loopVariable)) instead"
             )
         }
 
@@ -470,7 +470,7 @@ func parse(tokens: [Token]) throws -> Program {
         }
 
         throw JinjaError.syntaxError(
-            "Expected identifier/tuple for the loop variable, got \(loopVariable.type) instead"
+            "Expected identifier/tuple for the loop variable, got \(type(of:loopVariable)) instead"
         )
     }
 
