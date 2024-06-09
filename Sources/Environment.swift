@@ -41,7 +41,7 @@ class Environment {
                 return arg.value as! Int % 2 != 0
             }
             else {
-                throw JinjaError.runtimeError("Cannot apply test 'odd' to type: \(args.first!.type)")
+                throw JinjaError.runtimeError("Cannot apply test 'odd' to type: \(type(of:args.first))")
             }
         },
         "even": { args in
@@ -49,7 +49,7 @@ class Environment {
                 return arg.value as! Int % 2 == 0
             }
             else {
-                throw JinjaError.runtimeError("Cannot apply test 'even' to type: \(args.first!.type)")
+                throw JinjaError.runtimeError("Cannot apply test 'even' to type: \(type(of:args.first))")
             }
         },
         "false": { args in

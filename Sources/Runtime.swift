@@ -9,7 +9,6 @@ import Foundation
 
 protocol RuntimeValue {
     associatedtype T
-    var type: String { get }
     var value: T { get set }
 
     var builtins: [String: any RuntimeValue] { get set }
@@ -18,7 +17,6 @@ protocol RuntimeValue {
 }
 
 struct NumericValue: RuntimeValue {
-    let type: String = "NumericValue"
     var value: any Numeric
     var builtins: [String: any RuntimeValue] = [:]
 
@@ -28,7 +26,6 @@ struct NumericValue: RuntimeValue {
 }
 
 struct BooleanValue: RuntimeValue {
-    let type: String = "BooleanValue"
     var value: Bool
     var builtins: [String: any RuntimeValue] = [:]
 
@@ -38,7 +35,6 @@ struct BooleanValue: RuntimeValue {
 }
 
 struct NullValue: RuntimeValue {
-    let type: String = "NullValue"
     var value: (any RuntimeValue)?
     var builtins: [String: any RuntimeValue] = [:]
 
@@ -48,7 +44,6 @@ struct NullValue: RuntimeValue {
 }
 
 struct UndefinedValue: RuntimeValue {
-    let type: String = "UndefinedValue"
     var value: (any RuntimeValue)?
     var builtins: [String: any RuntimeValue] = [:]
 
@@ -58,7 +53,6 @@ struct UndefinedValue: RuntimeValue {
 }
 
 struct ArrayValue: RuntimeValue {
-    let type: String = "ArrayValue"
     var value: [any RuntimeValue]
     var builtins: [String: any RuntimeValue] = [:]
 
@@ -75,7 +69,6 @@ struct ArrayValue: RuntimeValue {
 }
 
 struct TupleValue: RuntimeValue {
-    let type: String = "TupleValue"
     var value: ArrayValue
     var builtins: [String: any RuntimeValue] = [:]
 
@@ -85,7 +78,6 @@ struct TupleValue: RuntimeValue {
 }
 
 struct ObjectValue: RuntimeValue {
-    let type: String = "BooleanValue"
     var value: [String: any RuntimeValue]
     var builtins: [String: any RuntimeValue] = [:]
 
@@ -105,7 +97,7 @@ struct ObjectValue: RuntimeValue {
                     }
                 }
                 else {
-                    throw JinjaError.runtimeError("Object key must be a string: got \(args[0].type)")
+                    throw JinjaError.runtimeError("Object key must be a string: got \(type(of:args[0]))")
                 }
             }),
             "items": FunctionValue(value: { _, _ in
@@ -129,7 +121,6 @@ struct ObjectValue: RuntimeValue {
 }
 
 struct FunctionValue: RuntimeValue {
-    let type: String = "FunctionValue"
     var value: ([any RuntimeValue], Environment) throws -> any RuntimeValue
     var builtins: [String: any RuntimeValue] = [:]
 
@@ -139,7 +130,6 @@ struct FunctionValue: RuntimeValue {
 }
 
 struct StringValue: RuntimeValue {
-    let type: String = "StringValue"
     var value: String
     var builtins: [String: any RuntimeValue] = [:]
 
@@ -303,7 +293,7 @@ struct Interpreter {
                         }
                     }
                     else {
-                        throw JinjaError.runtimeError("Cannot unpack non-iterable type: \(current.type)")
+                        throw JinjaError.runtimeError("Cannot unpack non-iterable type: \(type(of:current))")
                     }
                 default:
                     throw JinjaError.notSupportError
@@ -314,7 +304,7 @@ struct Interpreter {
             }
         }
         else {
-            throw JinjaError.runtimeError("Expected iterable type in for loop: got \(iterable.type)")
+            throw JinjaError.runtimeError("Expected iterable type in for loop: got \(type(of:iterable))")
         }
 
         return StringValue(value: result)
@@ -442,7 +432,7 @@ struct Interpreter {
         }
 
         throw JinjaError.syntaxError(
-            "Unknown operator '\(node.operation.value)' between \(left.type) and \(right.type)"
+            "Unknown operator '\(node.operation.value)' between \(type(of:left)) and \(type(of:right))"
         )
     }
 
@@ -517,7 +507,7 @@ struct Interpreter {
                 value = object.value[property.value] ?? object.builtins[property.value]
             }
             else {
-                throw JinjaError.runtimeError("Cannot access property with non-string: got \(property.type)")
+                throw JinjaError.runtimeError("Cannot access property with non-string: got \(type(of:property))")
             }
         }
         else if object is ArrayValue || object is StringValue {
@@ -540,7 +530,9 @@ struct Interpreter {
                 value = object.builtins[property.value]
             }
             else {
-                throw JinjaError.runtimeError("Cannot access property with non-string/non-number: got \(property.type)")
+                throw JinjaError.runtimeError(
+                    "Cannot access property with non-string/non-number: got \(type(of:property))"
+                )
             }
         }
         else {
@@ -548,7 +540,7 @@ struct Interpreter {
                 value = object.builtins[property.value]!
             }
             else {
-                throw JinjaError.runtimeError("Cannot access property with non-string: got \(property.type)")
+                throw JinjaError.runtimeError("Cannot access property with non-string: got \(type(of:property))")
             }
         }
 
@@ -598,7 +590,7 @@ struct Interpreter {
             return try fn.value(args, environment)
         }
         else {
-            throw JinjaError.runtimeError("Cannot call something that is not a function: got \(fn.type)")
+            throw JinjaError.runtimeError("Cannot call something that is not a function: got \(type(of:fn))")
         }
     }
 
@@ -670,7 +662,7 @@ struct Interpreter {
                 }
             }
 
-            throw JinjaError.runtimeError("Cannot apply filter \(operand.value) to type: \(operand.type)")
+            throw JinjaError.runtimeError("Cannot apply filter \(operand.value) to type: \(type(of:operand))")
         }
 
         throw JinjaError.runtimeError("Unknown filter: \(node.filter)")
