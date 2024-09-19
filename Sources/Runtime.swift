@@ -557,11 +557,7 @@ struct Interpreter {
 
         switch node.operation.value {
         case "not":
-            if let argument = argument as? BooleanValue {
-                return BooleanValue(value: !argument.value)
-            }
-
-            throw JinjaError.syntaxError("Unknown argument type: \(type(of:node.argument))")
+            return BooleanValue(value: !argument.bool())
         default:
             throw JinjaError.syntaxError("Unknown operator: \(node.operation.value)")
         }
