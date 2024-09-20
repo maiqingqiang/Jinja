@@ -17,7 +17,7 @@ class Environment {
             }
 
             if args.count != 1 || !(args[0] is ObjectValue) {
-                throw JinjaError.runtimeError("`namespace` expects either zero arguments or a single object argument")
+                throw JinjaError.runtimeError("`  namespace  ` expects either zero arguments or a single object argument。。。")
             }
 
             return args[0]
