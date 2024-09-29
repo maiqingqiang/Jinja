@@ -170,14 +170,14 @@ func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()
             if src[cursorPosition] == "\\" {
                 cursorPosition += 1
                 if cursorPosition >= src.count {
-                    throw JinjaError.syntaxError("Unexpected end of input")
+                    throw JinjaError.syntax("Unexpected end of input")
                 }
 
                 let escaped = String(src[cursorPosition])
                 cursorPosition += 1
 
                 guard let unescaped = escapeCharacters[escaped] else {
-                    throw JinjaError.syntaxError("Unexpected escaped character: \(escaped)")
+                    throw JinjaError.syntax("Unexpected escaped character: \(escaped)")
                 }
                 str.append(unescaped)
                 continue
@@ -186,7 +186,7 @@ func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()
             str.append(String(src[cursorPosition]))
             cursorPosition += 1
             if cursorPosition >= src.count {
-                throw JinjaError.syntaxError("Unexpected end of input")
+                throw JinjaError.syntax("Unexpected end of input")
             }
         }
         return str
@@ -219,7 +219,7 @@ func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()
             let lastTokenType = tokens.last?.type
 
             if lastTokenType == .text || lastTokenType == nil {
-                throw JinjaError.syntaxError("Unexpected character: \(char)")
+                throw JinjaError.syntax("Unexpected character: \(char)")
             }
 
             switch lastTokenType {
@@ -283,7 +283,7 @@ func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()
             continue
         }
 
-        throw JinjaError.syntaxError("Unexpected character: \(char)")
+        throw JinjaError.syntax("Unexpected character: \(char)")
     }
 
     return tokens

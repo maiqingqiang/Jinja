@@ -16,7 +16,7 @@ func parse(tokens: [Token]) throws -> Program {
         let prev = tokens[current]
         current += 1
         if prev.type != type {
-            throw JinjaError.parserError("Parser Error: \(error). \(prev.type) != \(type).")
+            throw JinjaError.parser("Parser Error: \(error). \(prev.type) != \(type).")
         }
 
         return prev
@@ -36,7 +36,7 @@ func parse(tokens: [Token]) throws -> Program {
                     argument = KeywordArgumentExpression(key: identifier, value: value as! Expression)
                 }
                 else {
-                    throw JinjaError.syntaxError("Expected identifier for keyword argument")
+                    throw JinjaError.syntax("Expected identifier for keyword argument")
                 }
             }
 
@@ -100,12 +100,12 @@ func parse(tokens: [Token]) throws -> Program {
         }
 
         if slices.isEmpty {
-            throw JinjaError.syntaxError("Expected at least one argument for member/slice expression")
+            throw JinjaError.syntax("Expected at least one argument for member/slice expression")
         }
 
         if isSlice {
             if slices.count > 3 {
-                throw JinjaError.syntaxError("Expected 0-3 arguments for slice expression")
+                throw JinjaError.syntax("Expected 0-3 arguments for slice expression")
             }
 
             return SliceExpression(
@@ -135,7 +135,7 @@ func parse(tokens: [Token]) throws -> Program {
             else {
                 property = try parsePrimaryExpression()
                 if !(property is Identifier) {
-                    throw JinjaError.syntaxError("Expected identifier following dot operator")
+                    throw JinjaError.syntax("Expected identifier following dot operator")
                 }
             }
 
@@ -166,7 +166,7 @@ func parse(tokens: [Token]) throws -> Program {
             current += 1
             var filter = try parsePrimaryExpression()
             if !(filter is Identifier) {
-                throw JinjaError.syntaxError("Expected identifier for the test")
+                throw JinjaError.syntax("Expected identifier for the test")
             }
 
             if typeof(.openParen) {
@@ -202,7 +202,7 @@ func parse(tokens: [Token]) throws -> Program {
                 operand = TestExpression(operand: operand as! Expression, negate: negate, test: test)
             }
             else {
-                throw JinjaError.syntaxError("Expected identifier for the test")
+                throw JinjaError.syntax("Expected identifier for the test")
             }
         }
         return operand
@@ -380,7 +380,7 @@ func parse(tokens: [Token]) throws -> Program {
             current += 1
             let expression = try parseExpressionSequence()
             if tokens[current].type != .closeParen {
-                throw JinjaError.syntaxError("Expected closing parenthesis, got \(tokens[current].type) instead")
+                throw JinjaError.syntax("Expected closing parenthesis, got \(tokens[current].type) instead")
             }
             current += 1
             return expression
@@ -416,7 +416,7 @@ func parse(tokens: [Token]) throws -> Program {
 
             return ObjectLiteral(value: values)
         default:
-            throw JinjaError.syntaxError("Unexpected token: \(token.type)")
+            throw JinjaError.syntax("Unexpected token: \(token.type)")
         }
     }
 
@@ -449,7 +449,7 @@ func parse(tokens: [Token]) throws -> Program {
         let loopVariable = try parseExpressionSequence(primary: true)
 
         if !(loopVariable is Identifier || loopVariable is TupleLiteral) {
-            throw JinjaError.syntaxError(
+            throw JinjaError.syntax(
                 "Expected identifier/tuple for the loop variable, got \(type(of:loopVariable)) instead"
             )
         }
@@ -469,7 +469,7 @@ func parse(tokens: [Token]) throws -> Program {
             return For(loopvar: loopVariable, iterable: iterable as! Expression, body: body)
         }
 
-        throw JinjaError.syntaxError(
+        throw JinjaError.syntax(
             "Expected identifier/tuple for the loop variable, got \(type(of:loopVariable)) instead"
         )
     }
@@ -496,7 +496,7 @@ func parse(tokens: [Token]) throws -> Program {
             try expect(type: .endFor, error: "Expected endfor token")
             try expect(type: .closeStatement, error: "Expected %} token")
         default:
-            throw JinjaError.syntaxError("Unknown statement type: \(tokens[current].type)")
+            throw JinjaError.syntax("Unknown statement type: \(tokens[current].type)")
         }
 
         return result
@@ -521,7 +521,7 @@ func parse(tokens: [Token]) throws -> Program {
         case .openExpression:
             return try parseJinjaExpression()
         default:
-            throw JinjaError.syntaxError("Unexpected token type: \(tokens[current].type)")
+            throw JinjaError.syntax("Unexpected token type: \(tokens[current].type)")
         }
     }
 

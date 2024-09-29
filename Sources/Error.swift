@@ -7,10 +7,20 @@
 
 import Foundation
 
-enum JinjaError: Error {
-    case syntaxError(String)
-    case parserError(String)
-    case runtimeError(String)
+enum JinjaError: Error, LocalizedError {
+    case syntax(String)
+    case parser(String)
+    case runtime(String)
     case todo(String)
-    case notSupportError
+    case syntaxNotSupported
+
+  var errorDescription: String? {
+    switch self {
+      case .syntax(let message): return "Syntax error: \(message)"
+      case .parser(let message): return "Parser error: \(message)"
+      case .runtime(let message): return "Runtime error: \(message)"
+      case .todo(let message): return "Todo error: \(message)"
+      case .syntaxNotSupported: return "Syntax not supported"
+    }
+  }
 }

@@ -23,7 +23,7 @@ public struct Template {
         try env.set(
             name: "raise_exception",
             value: { (args: String) throws in
-                throw JinjaError.runtimeError("\(args)")
+                throw JinjaError.runtime("\(args)")
             }
         )
         try env.set(name: "range", value: range)
