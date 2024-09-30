@@ -17,7 +17,7 @@ class Environment {
             }
 
             if args.count != 1 || !(args[0] is ObjectValue) {
-                throw JinjaError.runtimeError("`namespace` expects either zero arguments or a single object argument")
+                throw JinjaError.runtime("`namespace` expects either zero arguments or a single object argument")
             }
 
             return args[0]
@@ -41,7 +41,7 @@ class Environment {
                 return arg.value as! Int % 2 != 0
             }
             else {
-                throw JinjaError.runtimeError("Cannot apply test 'odd' to type: \(type(of:args.first))")
+                throw JinjaError.runtime("Cannot apply test 'odd' to type: \(type(of:args.first))")
             }
         },
         "even": { args in
@@ -49,7 +49,7 @@ class Environment {
                 return arg.value as! Int % 2 == 0
             }
             else {
-                throw JinjaError.runtimeError("Cannot apply test 'even' to type: \(type(of:args.first))")
+                throw JinjaError.runtime("Cannot apply test 'even' to type: \(type(of:args.first))")
             }
         },
         "false": { args in
@@ -100,7 +100,7 @@ class Environment {
             args[0] is UndefinedValue
         },
         "equalto": { _ in
-            throw JinjaError.notSupportError
+            throw JinjaError.syntaxNotSupported
         },
     ]
 
@@ -135,7 +135,7 @@ class Environment {
                 case let value as Bool:
                     arg = String(value)
                 default:
-                    throw JinjaError.runtimeError("Unknown arg type:\(type(of: args[0].value))")
+                    throw JinjaError.runtime("Unknown arg type:\(type(of: args[0].value))")
                 }
 
                 try fn(arg)
@@ -166,7 +166,7 @@ class Environment {
 
             return ObjectValue(value: object)
         default:
-            throw JinjaError.runtimeError("Cannot convert to runtime value: \(input) type:\(type(of: input))")
+            throw JinjaError.runtime("Cannot convert to runtime value: \(input) type:\(type(of: input))")
         }
     }
 
@@ -177,7 +177,7 @@ class Environment {
 
     func declareVariable(name: String, value: any RuntimeValue) throws -> any RuntimeValue {
         if self.variables.contains(where: { $0.0 == name }) {
-            throw JinjaError.syntaxError("Variable already declared: \(name)")
+            throw JinjaError.syntax("Variable already declared: \(name)")
         }
 
         self.variables[name] = value
@@ -200,7 +200,7 @@ class Environment {
             return try parent.resolve(name: name) as! Self
         }
 
-        throw JinjaError.runtimeError("Unknown variable: \(name)")
+        throw JinjaError.runtime("Unknown variable: \(name)")
     }
 
     func lookupVariable(name: String) -> any RuntimeValue {
