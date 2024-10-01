@@ -296,7 +296,7 @@ struct Interpreter {
                         throw JinjaError.runtime("Cannot unpack non-iterable type: \(type(of:current))")
                     }
                 default:
-                    throw JinjaError.syntaxNotSupported
+                        throw JinjaError.syntaxNotSupported(String(describing: node.loopvar))
                 }
 
                 let evaluated = try self.evaluateBlock(statements: node.body, environment: scope)
@@ -353,10 +353,10 @@ struct Interpreter {
         }
         else if let left = left as? NumericValue, let right = right as? NumericValue {
             switch node.operation.value {
-            case "+": throw JinjaError.syntaxNotSupported
-            case "-": throw JinjaError.syntaxNotSupported
-            case "*": throw JinjaError.syntaxNotSupported
-            case "/": throw JinjaError.syntaxNotSupported
+            case "+": throw JinjaError.syntaxNotSupported("+")
+            case "-": throw JinjaError.syntaxNotSupported("-")
+            case "*": throw JinjaError.syntaxNotSupported("*")
+            case "/": throw JinjaError.syntaxNotSupported("/")
             case "%":
                 switch left.value {
                 case is Int:
@@ -364,10 +364,10 @@ struct Interpreter {
                 default:
                     throw JinjaError.runtime("Unknown value type:\(type(of: left.value))")
                 }
-            case "<": throw JinjaError.syntaxNotSupported
-            case ">": throw JinjaError.syntaxNotSupported
-            case ">=": throw JinjaError.syntaxNotSupported
-            case "<=": throw JinjaError.syntaxNotSupported
+            case "<": throw JinjaError.syntaxNotSupported("<")
+            case ">": throw JinjaError.syntaxNotSupported(">")
+            case ">=": throw JinjaError.syntaxNotSupported(">=")
+            case "<=": throw JinjaError.syntaxNotSupported("<=")
             default:
                 throw JinjaError.runtime("Unknown operation type:\(node.operation.value)")
             }
@@ -380,7 +380,7 @@ struct Interpreter {
             }
         }
         else if right is ArrayValue {
-            throw JinjaError.syntaxNotSupported
+            throw JinjaError.syntaxNotSupported("right is ArrayValue")
         }
 
         if left is StringValue || right is StringValue {

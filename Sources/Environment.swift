@@ -100,7 +100,7 @@ class Environment {
             args[0] is UndefinedValue
         },
         "equalto": { _ in
-            throw JinjaError.syntaxNotSupported
+            throw JinjaError.syntaxNotSupported("equalto")
         },
     ]
 

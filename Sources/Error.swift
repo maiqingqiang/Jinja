@@ -12,7 +12,7 @@ enum JinjaError: Error, LocalizedError {
     case parser(String)
     case runtime(String)
     case todo(String)
-    case syntaxNotSupported
+    case syntaxNotSupported(String)
 
   var errorDescription: String? {
     switch self {
@@ -20,7 +20,7 @@ enum JinjaError: Error, LocalizedError {
       case .parser(let message): return "Parser error: \(message)"
       case .runtime(let message): return "Runtime error: \(message)"
       case .todo(let message): return "Todo error: \(message)"
-      case .syntaxNotSupported: return "Syntax not supported"
+      case .syntaxNotSupported(let string): return "Syntax not supported: \(string)"
     }
   }
 }
