@@ -165,6 +165,8 @@ class Environment {
             }
 
             return ObjectValue(value: object)
+        case is NullValue:
+            return NullValue()
         default:
             throw JinjaError.runtime("Cannot convert to runtime value: \(input) type:\(type(of: input))")
         }

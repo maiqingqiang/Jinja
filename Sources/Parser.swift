@@ -187,21 +187,18 @@ func parse(tokens: [Token]) throws -> Program {
         while typeof(.is) {
             current += 1
             let negate = typeof(.not)
-
             if negate {
                 current += 1
             }
-
             var filter = try parsePrimaryExpression()
-
-            if let boolLiteralFlter = filter as? BoolLiteral {
-                filter = Identifier(value: String(boolLiteralFlter.value))
+            if let boolLiteralFilter = filter as? BoolLiteral {
+                filter = Identifier(value: String(boolLiteralFilter.value))
+            } else if filter is NullLiteral {
+                filter = Identifier(value: "none")
             }
-
             if let test = filter as? Identifier {
                 operand = TestExpression(operand: operand as! Expression, negate: negate, test: test)
-            }
-            else {
+            } else {
                 throw JinjaError.syntax("Expected identifier for the test")
             }
         }
@@ -373,6 +370,9 @@ func parse(tokens: [Token]) throws -> Program {
         case .booleanLiteral:
             current += 1
             return BoolLiteral(value: token.value == "true")
+        case .nullLiteral:
+            current += 1
+            return NullLiteral()
         case .identifier:
             current += 1
             return Identifier(value: token.value)
@@ -415,6 +415,9 @@ func parse(tokens: [Token]) throws -> Program {
             current += 1
 
             return ObjectLiteral(value: values)
+        case .nullLiteral:
+            current += 1
+            return NullLiteral()
         default:
             throw JinjaError.syntax("Unexpected token: \(token.type)")
         }

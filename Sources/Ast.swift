@@ -120,3 +120,7 @@ struct KeywordArgumentExpression: Expression {
     var key: Identifier
     var value: any Expression
 }
+
+struct NullLiteral: Literal {
+    var value: Any? = nil
+}

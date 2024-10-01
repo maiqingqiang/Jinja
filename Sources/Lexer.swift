@@ -12,6 +12,7 @@ enum TokenType: String {
 
     case numericLiteral = "NumericLiteral"
     case booleanLiteral = "BooleanLiteral"
+    case nullLiteral = "NullLiteral"
     case stringLiteral = "StringLiteral"
     case identifier = "Identifier"
     case equals = "Equals"
@@ -69,8 +70,10 @@ let keywords: [String: TokenType] = [
     "and": .and,
     "or": .or,
     "not": .not,
+    // Literals
     "true": .booleanLiteral,
     "false": .booleanLiteral,
+    "none": .nullLiteral,
 ]
 
 func isWord(char: String) -> Bool {
@@ -226,6 +229,7 @@ func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()
             case .identifier,
                 .numericLiteral,
                 .booleanLiteral,
+                .nullLiteral,
                 .stringLiteral,
                 .closeParen,
                 .closeSquareBracket:

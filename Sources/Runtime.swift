@@ -693,8 +693,10 @@ struct Interpreter {
                 return BooleanValue(value: statement.value)
             case let statement as FilterExpression:
                 return try self.evaluateFilterExpression(node: statement, environment: environment)
+            case is NullLiteral:
+                return NullValue()
             default:
-                throw JinjaError.runtime("Unknown node type: \(type(of:statement))")
+                throw JinjaError.runtime("Unknown node type: \(type(of:statement)), statement: \(String(describing: statement))")
             }
         }
         else {
