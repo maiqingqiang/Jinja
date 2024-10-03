@@ -296,7 +296,7 @@ struct Interpreter {
                         throw JinjaError.runtime("Cannot unpack non-iterable type: \(type(of:current))")
                     }
                 default:
-                    throw JinjaError.syntaxNotSupported
+                        throw JinjaError.syntaxNotSupported(String(describing: node.loopvar))
                 }
 
                 let evaluated = try self.evaluateBlock(statements: node.body, environment: scope)
@@ -353,10 +353,10 @@ struct Interpreter {
         }
         else if let left = left as? NumericValue, let right = right as? NumericValue {
             switch node.operation.value {
-            case "+": throw JinjaError.syntaxNotSupported
-            case "-": throw JinjaError.syntaxNotSupported
-            case "*": throw JinjaError.syntaxNotSupported
-            case "/": throw JinjaError.syntaxNotSupported
+            case "+": throw JinjaError.syntaxNotSupported("+")
+            case "-": throw JinjaError.syntaxNotSupported("-")
+            case "*": throw JinjaError.syntaxNotSupported("*")
+            case "/": throw JinjaError.syntaxNotSupported("/")
             case "%":
                 switch left.value {
                 case is Int:
@@ -364,10 +364,10 @@ struct Interpreter {
                 default:
                     throw JinjaError.runtime("Unknown value type:\(type(of: left.value))")
                 }
-            case "<": throw JinjaError.syntaxNotSupported
-            case ">": throw JinjaError.syntaxNotSupported
-            case ">=": throw JinjaError.syntaxNotSupported
-            case "<=": throw JinjaError.syntaxNotSupported
+            case "<": throw JinjaError.syntaxNotSupported("<")
+            case ">": throw JinjaError.syntaxNotSupported(">")
+            case ">=": throw JinjaError.syntaxNotSupported(">=")
+            case "<=": throw JinjaError.syntaxNotSupported("<=")
             default:
                 throw JinjaError.runtime("Unknown operation type:\(node.operation.value)")
             }
@@ -380,7 +380,7 @@ struct Interpreter {
             }
         }
         else if right is ArrayValue {
-            throw JinjaError.syntaxNotSupported
+            throw JinjaError.syntaxNotSupported("right is ArrayValue")
         }
 
         if left is StringValue || right is StringValue {
@@ -428,7 +428,20 @@ struct Interpreter {
         }
 
         if left is StringValue, right is ObjectValue {
-            throw JinjaError.syntaxNotSupported
+            switch node.operation.value {
+                case "in":
+                    if let leftString = (left as? StringValue)?.value,
+                       let rightObject = right as? ObjectValue {
+                        return BooleanValue(value: rightObject.value.keys.contains(leftString))
+                    }
+                case "not in":
+                    if let leftString = (left as? StringValue)?.value,
+                       let rightObject = right as? ObjectValue {
+                        return BooleanValue(value: !rightObject.value.keys.contains(leftString))
+                    }
+                default:
+                    throw JinjaError.runtime("Unsupported operation '\(node.operation.value)' between StringValue and ObjectValue")
+            }
         }
 
         throw JinjaError.syntax(
@@ -664,6 +677,17 @@ struct Interpreter {
         throw JinjaError.runtime("Unknown filter: \(node.filter)")
     }
 
+    func evaluateTestExpression(node: TestExpression, environment: Environment) throws -> any RuntimeValue {
+        let operand = try self.evaluate(statement: node.operand, environment: environment)
+
+        if let testFunction = environment.tests[node.test.value] {
+            let result = try testFunction(operand)
+            return BooleanValue(value: node.negate ? !result : result)
+        } else {
+            throw JinjaError.runtime("Unknown test: \(node.test.value)")
+        }
+    }
+
     func evaluate(statement: Statement?, environment: Environment) throws -> any RuntimeValue {
         if let statement {
             switch statement {
@@ -693,8 +717,12 @@ struct Interpreter {
                 return BooleanValue(value: statement.value)
             case let statement as FilterExpression:
                 return try self.evaluateFilterExpression(node: statement, environment: environment)
+            case let statement as TestExpression:
+              return try self.evaluateTestExpression(node: statement, environment: environment)
+            case is NullLiteral:
+                return NullValue()
             default:
-                throw JinjaError.runtime("Unknown node type: \(type(of:statement))")
+                throw JinjaError.runtime("Unknown node type: \(type(of:statement)), statement: \(String(describing: statement))")
             }
         }
         else {

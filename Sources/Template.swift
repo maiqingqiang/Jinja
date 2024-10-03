@@ -20,6 +20,7 @@ public struct Template {
 
         try env.set(name: "false", value: false)
         try env.set(name: "true", value: true)
+        try env.set(name: "none", value: NullValue())
         try env.set(
             name: "raise_exception",
             value: { (args: String) throws in

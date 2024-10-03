@@ -145,6 +145,9 @@ final class LexerTests: XCTestCase {
         "UNDEFINED_VARIABLES": "{{ undefined_variable }}",
         "UNDEFINED_ACCESS": "{{ object.undefined_attribute }}",
 
+        // Null
+        "NULL_VARIABLE": "{% if not null_val is defined %}{% set null_val = none %}{% endif %}{% if null_val is not none %}{{ 'fail' }}{% else %}{{ 'pass' }}{% endif %}",
+
         // Ternary operator
         "TERNARY_OPERATOR":
             "|{{ 'a' if true else 'b' }}|{{ 'a' if false else 'b' }}|{{ 'a' if 1 + 1 == 2 else 'b' }}|{{ 'a' if 1 + 1 == 3 or 1 * 2 == 3 else 'b' }}|",
@@ -2032,7 +2035,7 @@ final class LexerTests: XCTestCase {
             Token(value: "unknown", type: .stringLiteral),
             Token(value: ")", type: .closeParen),
             Token(value: "is", type: .is),
-            Token(value: "none", type: .identifier),
+            Token(value: "none", type: .nullLiteral),
             Token(value: "}}", type: .closeExpression),
             Token(value: "|", type: .text),
             Token(value: "{{", type: .openExpression),
@@ -2175,6 +2178,45 @@ final class LexerTests: XCTestCase {
             Token(value: ".", type: .dot),
             Token(value: "undefined_attribute", type: .identifier),
             Token(value: "}}", type: .closeExpression),
+        ],
+
+        // Null
+        "NULL_VARIABLE": [
+          Token(value: "{%", type: .openStatement),
+          Token(value: "if", type: .if),
+          Token(value: "not", type: .not),
+          Token(value: "null_val", type: .identifier),
+          Token(value: "is", type: .is),
+          Token(value: "defined", type: .identifier),
+          Token(value: "%}", type: .closeStatement),
+          Token(value: "{%", type: .openStatement),
+          Token(value: "set", type: .set),
+          Token(value: "null_val", type: .identifier),
+          Token(value: "=", type: .equals),
+          Token(value: "none", type: .nullLiteral),
+          Token(value: "%}", type: .closeStatement),
+          Token(value: "{%", type: .openStatement),
+          Token(value: "endif", type: .endIf),
+          Token(value: "%}", type: .closeStatement),
+          Token(value: "{%", type: .openStatement),
+          Token(value: "if", type: .if),
+          Token(value: "null_val", type: .identifier),
+          Token(value: "is", type: .is),
+          Token(value: "not", type: .not),
+          Token(value: "none", type: .nullLiteral),
+          Token(value: "%}", type: .closeStatement),
+          Token(value: "{{", type: .openExpression),
+          Token(value: "fail", type: .stringLiteral),
+          Token(value: "}}", type: .closeExpression),
+          Token(value: "{%", type: .openStatement),
+          Token(value: "else", type: .else),
+          Token(value: "%}", type: .closeStatement),
+          Token(value: "{{", type: .openExpression),
+          Token(value: "pass", type: .stringLiteral),
+          Token(value: "}}", type: .closeExpression),
+          Token(value: "{%", type: .openStatement),
+          Token(value: "endif", type: .endIf),
+          Token(value: "%}", type: .closeStatement),
         ],
 
         // Ternary operator
