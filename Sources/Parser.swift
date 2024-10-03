@@ -389,13 +389,11 @@ func parse(tokens: [Token]) throws -> Program {
             var values: [Expression] = []
             while !typeof(.closeSquareBracket) {
                 try values.append(parseExpression() as! Expression)
-
                 if typeof(.comma) {
                     current += 1
                 }
             }
             current += 1
-
             return ArrayLiteral(value: values)
         case .openCurlyBracket:
             current += 1
@@ -404,20 +402,13 @@ func parse(tokens: [Token]) throws -> Program {
                 let key = try parseExpression()
                 try expect(type: .colon, error: "Expected colon between key and value in object literal")
                 let value = try parseExpression()
-
                 values.append((key as! Expression, value as! Expression))
-
                 if typeof(.comma) {
                     current += 1
                 }
             }
-
             current += 1
-
             return ObjectLiteral(value: values)
-        case .nullLiteral:
-            current += 1
-            return NullLiteral()
         default:
             throw JinjaError.syntax("Unexpected token: \(token.type)")
         }
