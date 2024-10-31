@@ -141,23 +141,23 @@ func preprocess(template: String, options: PreprocessOptions = PreprocessOptions
         template.removeLast()
     }
 
-    template = template.replacing(/{#.*?#}/, with: "{##}")
+    template = template.replacing(#/{#.*?#}/#, with: "{##}")
 
     if options.lstripBlocks == true {
-        template = template.replacing(/(?m)^[ \t]*({[#%])/, with: { $0.output.1 })
+        template = template.replacing(#/(?m)^[ \t]*({[#%])/#, with: { $0.output.1 })
     }
 
     if options.trimBlocks == true {
-        template = template.replacing(/([#%]})\n/, with: { $0.output.1 })
+        template = template.replacing(#/([#%]})\n/#, with: { $0.output.1 })
     }
 
     return
         template
-        .replacing(/{##}/, with: "")
-        .replacing(/-%}\s*/, with: "%}")
-        .replacing(/\s*{%-/, with: "{%")
-        .replacing(/-}}\s*/, with: "}}")
-        .replacing(/\s*{{-/, with: "{{")
+        .replacing(#/{##}/#, with: "")
+        .replacing(#/-%}\s*/#, with: "%}")
+        .replacing(#/\s*{%-/#, with: "{%")
+        .replacing(#/-}}\s*/#, with: "}}")
+        .replacing(#/\s*{{-/#, with: "{{")
 }
 
 func tokenize(_ source: String, options: PreprocessOptions = PreprocessOptions()) throws -> [Token] {
